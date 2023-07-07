@@ -6,14 +6,12 @@ from wordfreq import word_frequency
 
 
 class WordleSolver:
-    app = QApplication(sys.argv)
-    grid = WordleGrid()
+
     listOfRegex = []
     listOfWords = []
-    rejects = []
 
     def __init__(self) -> None:
-
+        self.grid = WordleGrid()
         for n in range(0, 5):
             self.listOfRegex.append('.')
         self.listOfWords = self.grid.buildTempList()

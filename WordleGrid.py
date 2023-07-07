@@ -16,20 +16,21 @@ EPOCH_DATE = date(2023, 6, 26)
 
 
 class WordleGrid(QWidget):
-
     wordBank = []
     guessDictionary = {}
-    wordleRows = []
-    currWordleRow = None
-    currTurn = 0
 
     def __init__(self) -> None:
         super().__init__()
+
+        self.wordleRows = []
+        self.currWordleRow = None
+        self.currTurn = 0
         self.isWinner = False
         self.isDone = False
-        with open(wordBank_Path) as wb:
-            self.wordBank = wb.read().splitlines()
-        self.buildGuessBank()
+        if len(self.wordBank) == 0:
+            with open(wordBank_Path) as wb:
+                self.wordBank = wb.read().splitlines()
+            self.buildGuessBank()
         self.buildGrid()
         self.setFixedSize(QSize(600, 600))
         self.puzzleNumber = self.getPuzzleNumber()

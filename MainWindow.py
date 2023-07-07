@@ -8,6 +8,7 @@ import WordleGrid
 from KeyBoard import KeyBoard
 from enums import Status
 import pyperclip
+from GameOverWindow import GameOverWindow
 # import enchant
 import webbrowser
 
@@ -27,6 +28,8 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.centralWidget = QWidget()
+
+        self.gameOverWindow = None
 
         app_icon = QIcon('icon\MainIconGOOD.png')
         self.setWindowIcon(app_icon)
@@ -197,6 +200,11 @@ class MainWindow(QMainWindow):
     def resetCurrCol(self):
         self.currCol = -1
 
+    def showGameOverWindow(self):
+        if self.gameOverWindow == None:
+            self.gameOverWindow = GameOverWindow()
+            self.gameOverWindow.show()
+
     def keyPressEvent(self, e: QKeyEvent) -> None:
         if not self.wordleGrid.isDone:
             keyInt = e.key()
@@ -229,6 +237,7 @@ class MainWindow(QMainWindow):
                                 len(dict["correct"]) == 5)
                             self.wordleGrid.nextGuess()
                             if self.wordleGrid.isWinner or self.wordleGrid.getGuessCount() == 6:
+                                self.showGameOverWindow()
                                 self.wordleGrid.isDone = True
                                 self.clipBoardButton.setEnabled(True)
                                 if (self.wordleGrid.isWinner):
