@@ -1,6 +1,6 @@
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QButtonGroup, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget, QPushButton
+from PyQt5.QtWidgets import QApplication, QButtonGroup, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget, QPushButton, QMainWindow
 from PyQt5.QtGui import QColor, QFont, QKeyEvent, QIcon
 from PyQt5.QtCore import Qt, QTimer, QSize
 from WordleRow import WordleRow
@@ -16,7 +16,7 @@ import webbrowser
 CACHE_PATH = "game.txt"
 
 
-class MainWindow(QWidget):
+class MainWindow(QMainWindow):
     BACK_SPACE = 16777219
     ENTER_SUBMIT = 16777220
     correctColor = QColor(106, 170, 100)
@@ -26,9 +26,11 @@ class MainWindow(QWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.centralWidget = QWidget()
 
         app_icon = QIcon('icon\MainIconGOOD.png')
         self.setWindowIcon(app_icon)
+        self.centralWidget.setWindowIcon(app_icon)
         # self.setFixedSize(600,950)
         self.wordleGrid = WordleGrid.WordleGrid()
 
@@ -91,13 +93,18 @@ class MainWindow(QWidget):
             self.keyboard, Qt.AlignmentFlag.AlignHCenter)
 
         self.layout2.addWidget(self.clipBoardButton)
-        self.setLayout(self.layout2)
+        self.centralWidget.setLayout(self.layout2)
+
+        self.setCentralWidget(self.centralWidget)
 
         self.show()
 
     def clearCache(self):
         file = open(CACHE_PATH, "w")
         file.close()
+    '''
+    Loads last games information into the WordleGrid and recalculate
+    '''
 
     def replayTheCache(self, pastPuzzle: list):
         n = 0

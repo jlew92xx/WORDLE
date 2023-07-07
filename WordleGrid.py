@@ -52,6 +52,9 @@ class WordleGrid(QWidget):
     def evalSubmission(self):
         if isinstance(self.currWordleRow, WordleRow):
             return self.currWordleRow.evalSubmission(self.getWordOfTheDay())
+    '''
+    used for the WordleSolver class. returns dict that includes the index as well
+    '''
 
     def evalSubmission2(self):
         if isinstance(self.currWordleRow, WordleRow):
