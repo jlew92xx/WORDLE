@@ -253,7 +253,7 @@ class MainWindow(QMainWindow):
                                             "You solved it. Barely.", "lightgrey", 2000)
 
                                 else:
-                                    self.displayTempMsg("Loser!")
+                                    self.displayTempMsg("Loser!", "red", 10000)
                                     webbrowser.open(
                                         "https://www.youtube.com/watch?v=eNynxWZK30A")
 
