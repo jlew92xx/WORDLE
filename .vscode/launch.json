@@ -9,6 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "MainWindow.py",
+            //"program": "WordleSolver.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }

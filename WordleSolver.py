@@ -105,7 +105,7 @@ class WordleSolver:
         return output
 
     def solve(self):
-        # ws.grid.setWordOfTheDay("eerie")
+        # self.grid.setWordOfTheDay("donut")
         currGuess = "SALET"
 
         listOfWordsCopy = self.listOfWords.copy()
@@ -147,6 +147,6 @@ class WordleSolver:
 
 
 if __name__ == '__main__':
-
+    app = QApplication(sys.argv)
     ws = WordleSolver()
     ws.solve()

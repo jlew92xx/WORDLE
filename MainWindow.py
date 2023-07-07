@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
 
         self.gameOverWindow = None
 
-        app_icon = QIcon('icon\MainIconGOOD.png')
+        app_icon = QIcon('Icons\MainIconGOOD.png')
         self.setWindowIcon(app_icon)
         self.centralWidget.setWindowIcon(app_icon)
         # self.setFixedSize(600,950)
@@ -184,6 +184,7 @@ class MainWindow(QMainWindow):
         self.clipBoardButton.setEnabled(False)
         self.wordleGrid.isDone = False
         self.wordleGrid.isWinner = False
+        self.gameOverWindow = None
 
     def appendToCache(self, word):
         file = open(CACHE_PATH, "a")
@@ -203,7 +204,7 @@ class MainWindow(QMainWindow):
     def showGameOverWindow(self):
         if self.gameOverWindow == None:
             self.gameOverWindow = GameOverWindow()
-            self.gameOverWindow.show()
+        self.gameOverWindow.show()
 
     def keyPressEvent(self, e: QKeyEvent) -> None:
         if not self.wordleGrid.isDone:
