@@ -41,13 +41,18 @@ class MainWindow(QWidget):
         self.layout2 = QVBoxLayout()
         self.clipBoardButton = QPushButton("Copy Results to Clipboard")
         self.layout2.setSpacing(3)
-        self.layout2.addWidget(self.createToolbar())
+        self.toolBar = self.createToolbar()
+        self.layout2.addWidget(self.toolBar)
+        self.layout2.setAlignment(
+            self.toolBar, Qt.AlignmentFlag.AlignHCenter)
 
         self.layout2.setContentsMargins(0, 0, 0, 0)
         # This resets the current letter or column back to the beginning
         self.resetCurrCol()
         self.guesses = []
         self.layout2.addWidget(self.wordleGrid)
+        self.layout2.setAlignment(
+            self.wordleGrid, Qt.AlignmentFlag.AlignHCenter)
         self.keyboard = KeyBoard()
         self.clipBoardButton.setEnabled(False)
         self.clipBoardButton.clicked.connect(self.copyToClipboard)
@@ -78,8 +83,12 @@ class MainWindow(QWidget):
         self.disappearingLabel.setSizePolicy(sp)
 
         self.layout2.addWidget(self.disappearingLabel)
+        self.layout2.setAlignment(
+            self.disappearingLabel, Qt.AlignmentFlag.AlignHCenter)
         self.disappearingLabel.setVisible(False)
         self.layout2.addWidget(self.keyboard)
+        self.layout2.setAlignment(
+            self.keyboard, Qt.AlignmentFlag.AlignHCenter)
 
         self.layout2.addWidget(self.clipBoardButton)
         self.setLayout(self.layout2)
@@ -116,7 +125,7 @@ class MainWindow(QWidget):
             self.displayTempMsg(
                 "Do you really want to share these results?", "lightgrey", 2000)
 
-    def createToolbar(self) -> QWidget:
+    def createToolbar(self):
         output = QWidget()
         layout = QHBoxLayout()
 
