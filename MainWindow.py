@@ -81,6 +81,7 @@ class MainWindow(QMainWindow):
             self.appendToCache(str(self.wordleGrid.getPuzzleNumber()))
 
         self.disappearingLabel = QLabel()
+        self.disappearingLabel.setFont(QFont('Arial Black', 12))
         self.disappearingLabel.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         sp = QSizePolicy()
         sp.setRetainSizeWhenHidden(True)
@@ -247,7 +248,7 @@ class MainWindow(QMainWindow):
                                             "YOU CHEATIN' SoB", "green", 3000)
                                     elif self.wordleGrid.getGuessCount() > 2 and self.wordleGrid.getGuessCount() <= 4:
                                         self.displayTempMsg(
-                                            "Well, you're above average, but that's nothing to brag about.\nJust think about how stupid the average person is.", "yellow", 6000)
+                                            "Well, you're slightly above average. BIG DEAL", "yellow", 6000)
                                     else:
                                         self.displayTempMsg(
                                             "You solved it. Barely.", "lightgrey", 2000)
