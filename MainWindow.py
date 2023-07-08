@@ -204,7 +204,7 @@ class MainWindow(QMainWindow):
 
     def showGameOverWindow(self):
         if self.gameOverWindow == None:
-            self.gameOverWindow = GameOverWindow()
+            self.gameOverWindow = GameOverWindow(self)
         self.gameOverWindow.show()
 
     def keyPressEvent(self, e: QKeyEvent) -> None:
