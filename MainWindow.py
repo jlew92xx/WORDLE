@@ -257,10 +257,9 @@ class MainWindow(QMainWindow):
             if (isinstance(currGuess, WordleRow)):
                 if (keyInt >= 65 and keyInt <= 132 or keyInt >= 97 and keyInt <= 122):
 
-                    if (self.currCol < 5):
-                        if (self.currCol != 4):
-                            self.currCol += 1
-                            currGuess.setBox(self.currCol, e.text().upper())
+                    if (self.currCol < 4):
+                        self.currCol += 1
+                        currGuess.setBox(self.currCol, e.text().upper())
 
                 elif (keyInt == self.BACK_SPACE):
                     if (self.currCol > -1):
@@ -320,8 +319,9 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == '__main__':
+    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+
     app = QApplication(sys.argv)
-    app_icon = QIcon('icon\MainIconGOOD.png')
-    app.setWindowIcon(app_icon)
+    app.setAttribute(Qt.AA_EnableHighDpiScaling)
     window = MainWindow()
     sys.exit(app.exec())
