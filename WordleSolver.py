@@ -105,7 +105,7 @@ class WordleSolver:
         return output
 
     def solve(self):
-        # self.grid.setWordOfTheDay("donut")
+        # self.grid.setWordOfTheDay("cower")
         currGuess = "SALET"
 
         listOfWordsCopy = self.listOfWords.copy()

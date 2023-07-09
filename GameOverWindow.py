@@ -14,7 +14,6 @@ class GameOverWindow(QWidget):
         layout = QVBoxLayout()
         solver = WordleSolver()
         solver.solve()
-        self.overrideWindowFlags
         botGrid = solver.grid
 
         layout.addWidget(botGrid, 0, Qt.AlignmentFlag.AlignHCenter)

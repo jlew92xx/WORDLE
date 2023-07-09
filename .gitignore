@@ -6,6 +6,7 @@ __pycache__/
 # C extensions
 *.so
 game.txt
+profile.txt
 # Distribution / packaging
 .Python
 build/

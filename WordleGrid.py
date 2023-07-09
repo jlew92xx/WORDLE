@@ -21,7 +21,6 @@ class WordleGrid(QWidget):
 
     def __init__(self) -> None:
         super().__init__()
-
         self.wordleRows = []
         self.currWordleRow = None
         self.currTurn = 0

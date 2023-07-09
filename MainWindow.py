@@ -1,6 +1,6 @@
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QButtonGroup, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget, QPushButton, QMainWindow
+from PyQt5.QtWidgets import QApplication, QButtonGroup, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget, QPushButton, QMainWindow, QDialog, QLineEdit, QFormLayout, QGroupBox
 from PyQt5.QtGui import QColor, QFont, QKeyEvent, QIcon
 from PyQt5.QtCore import Qt, QTimer, QSize
 from WordleRow import WordleRow
@@ -9,12 +9,16 @@ from KeyBoard import KeyBoard
 from enums import Status
 import pyperclip
 from GameOverWindow import GameOverWindow
+from discord import Webhook
+import asyncio
+import aiohttp
 # import enchant
 import webbrowser
 
 
 # d = enchant.Dict("en_US")
 CACHE_PATH = "game.txt"
+PROFILE_PATH = "profile.txt"
 
 
 class MainWindow(QMainWindow):
@@ -24,12 +28,15 @@ class MainWindow(QMainWindow):
     inWordColor = QColor(201, 180, 88)
     incorrectColor = QColor(120, 124, 126)
     unknownColor = QColor(211, 214, 218)
+    name = ""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.centralWidget = QWidget()
 
         self.gameOverWindow = None
+        self.nameEntryForm = None
+        self.nameLineEdit = None
 
         app_icon = QIcon('Icons\MainIconGOOD.png')
         self.setWindowIcon(app_icon)
@@ -101,6 +108,35 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self.centralWidget)
 
+        if os.path.isfile(PROFILE_PATH):
+            file = open(PROFILE_PATH, 'r')
+            lines = file.readlines()
+            if (len(lines) > 0):
+                self.name = lines[0]
+            file.close()
+            self.show()
+        else:
+            self.dialog = QDialog(self)
+            formGroup = QGroupBox()
+            self.nameLineEdit = QLineEdit()
+            okButton = QPushButton("Ok")
+            okButton.clicked.connect(self.setName)
+            mainLayout = QVBoxLayout()
+            formLayout = QFormLayout()
+
+            formLayout.addRow(QLabel("Name"), self.nameLineEdit)
+            formGroup.setLayout(formLayout)
+            mainLayout.addWidget(formGroup)
+            mainLayout.addWidget(okButton)
+            self.dialog.setLayout(mainLayout)
+            self.dialog.show()
+
+    def setName(self):
+        self.name = self.nameLineEdit.text()
+        file = open(PROFILE_PATH, 'w')
+        file.write(self.name)
+        file.close()
+        self.dialog.close()
         self.show()
 
     def clearCache(self):
@@ -207,6 +243,13 @@ class MainWindow(QMainWindow):
             self.gameOverWindow = GameOverWindow(self)
         self.gameOverWindow.show()
 
+    async def sendDiscordMessage(self, msg):
+        async with aiohttp.ClientSession() as session:
+
+            webHook = Webhook.from_url(
+                "https://discord.com/api/webhooks/1127398517942517791/VVTL1nHMkN4virf0BTX3QrOWb3OXLJvZyLCjmXZ6ltt_Nbcdfg-5ld1iubGhEHsoPyoB", session=session)
+            await webHook.send(self.name+"'s results:\n"+msg)
+
     def keyPressEvent(self, e: QKeyEvent) -> None:
         if not self.wordleGrid.isDone:
             keyInt = e.key()
@@ -239,6 +282,11 @@ class MainWindow(QMainWindow):
                                 len(dict["correct"]) == 5)
                             self.wordleGrid.nextGuess()
                             if self.wordleGrid.isWinner or self.wordleGrid.getGuessCount() == 6:
+                                loop = asyncio.new_event_loop()
+                                loop.run_until_complete(self.sendDiscordMessage(
+                                    self.wordleGrid.createPuzzleResults()))
+                                loop.close()
+
                                 self.showGameOverWindow()
                                 self.wordleGrid.isDone = True
                                 self.clipBoardButton.setEnabled(True)
@@ -257,7 +305,8 @@ class MainWindow(QMainWindow):
                                     self.displayTempMsg("Loser!", "red", 10000)
                                     webbrowser.open(
                                         "https://www.youtube.com/watch?v=eNynxWZK30A")
-
+                                self.displayTempMsg(
+                                    "SENDING RESULTS TO DISCORD", "blue", 5000)
                             self.resetCurrCol()
 
                         else:
