@@ -305,8 +305,7 @@ class MainWindow(QMainWindow):
                                     self.displayTempMsg("Loser!", "red", 10000)
                                     webbrowser.open(
                                         "https://www.youtube.com/watch?v=eNynxWZK30A")
-                                self.displayTempMsg(
-                                    "SENDING RESULTS TO DISCORD", "blue", 5000)
+
                             self.resetCurrCol()
 
                         else:
