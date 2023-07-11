@@ -32,14 +32,14 @@ class WordleSolver:
     def regrexList(self, copyListOfWords, inWord: list) -> list:
         rg = self.buildRegexString().lower()
         r = re.compile(rg)
-        outputList = [s for s in copyListOfWords if r.match(s)]
+
         regex = ""
         for c in inWord:
             ch = c[0].lower()
             regex += "(?=(?:[^"+ch+"]*["+ch+"]){"+str(c[1])+",})"
 
         r2 = re.compile(regex)
-        outputList = [s for s in outputList if r2.match(s)]
+        outputList = [s for s in copyListOfWords if r2.match(s) and r.match(s)]
 
         return outputList
 
@@ -82,6 +82,13 @@ class WordleSolver:
                     output = word
 
         return output
+
+    def reset(self):
+        self.listOfRegex = []
+        for n in range(0, 5):
+            self.listOfRegex.append('.')
+        self.grid.reset()
+
     '''
     Return list of tuples first is the letter and 2nd is the count
     '''
@@ -104,49 +111,82 @@ class WordleSolver:
 
         return output
 
-    def solve(self):
-        # self.grid.setWordOfTheDay("cower")
-        currGuess = "SALET"
+    def solve(self, firstGuess: str):
+
+        currGuess = firstGuess.upper()
 
         listOfWordsCopy = self.listOfWords.copy()
         while (not (self.grid.isDone or self.grid.isWinner)):
 
-            print(currGuess)
+            # print(currGuess)
             self.grid.currWordleRow.quickSet(currGuess)
             dict = self.grid.evalSubmission2()
+            correctList = dict["correct"]
+            inWordList = dict["inword"]
+            incorrectList = dict["incorrect"]
 
-            self.grid.isWinner = (len(dict["correct"]) == 5)
+            self.grid.isWinner = (len(correctList) == 5)
             self.grid.nextGuess()
             if (self.grid.isWinner):
                 break
-            for tp in dict["correct"]:
+            for tp in correctList:
                 self.setCorrectChar(tp)
             # I need to add any duplicates when one's yellow and one is incorrect
             listAdd = []
-            for inc in dict["incorrect"]:
-                for inw in dict["inword"]:
+            for inc in incorrectList:
+                for inw in inWordList:
                     if inc[0] == inw[0]:
-                        listAdd.append(dict["incorrect"].pop(
-                            dict["incorrect"].index(inc)))
+                        try:
+                            listAdd.append(incorrectList.pop(
+                                incorrectList.index(inc)))
+                        except:
+                            pass
 
-            tempInWord = dict["inword"] + listAdd
+            tempInWord = inWordList + listAdd
 
-            for tp in dict["incorrect"]:
+            for tp in incorrectList:
                 self.setIncorrectChars(tp)
 
             for tp in tempInWord:
                 self.setInWordChars(tp)
 
-            listCount = self.countByLetter(dict["inword"] + dict["correct"])
+            listCount = self.countByLetter(inWordList + correctList)
             listOfWordsCopy = self.regrexList(listOfWordsCopy, listCount)
 
             self.grid.isDone = (self.grid.getGuessCount() == 6)
             currGuess = self.wordFreakAnalysis(listOfWordsCopy).upper()
 
-        print(self.grid.createPuzzleResults())
+        # print(self.grid.createPuzzleResults())
+
+    def bestFirstGuess(self):
+        wordbank = self.grid.getWordBank()
+        guessbank = self.listOfWords
+        output = "belch"
+        outputCountWrong = 28
+
+        for guess in guessbank[178:]:
+            count = 0
+            for word in wordbank:
+                self.grid.setWordOfTheDay(word)
+                self.solve(guess)
+                if not self.grid.isWinner:
+                    count += 1
+                self.reset()
+                if count > outputCountWrong:
+                    break
+            if count < outputCountWrong:
+                outputCountWrong = count
+                output = guess
+
+        print("The word, " + output + " is your best first guess with " +
+              outputCountWrong + " failures")
+
+        return output
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ws = WordleSolver()
-    ws.solve()
+    ws.bestFirstGuess()
+    # ws.grid.setWordOfTheDay("BLEED")
+    # ws.solve("EERIE")

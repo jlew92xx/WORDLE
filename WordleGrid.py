@@ -89,8 +89,11 @@ class WordleGrid(QWidget):
                     self.guessDictionary[k].append(word)
 
     def reset(self):
+        self.isWinner = False
+        self.isDone = False
+        for guess in self.wordleRows:
+            guess.reset()
         self.currTurn = 0
-        self.pickWordForTheDay()
 
     def hashCurrDate(self):
         currDate = str(date.today()) + "SALT"
@@ -102,6 +105,9 @@ class WordleGrid(QWidget):
         numFiveLetterWords = len(self.wordBank)
         self.wordOfTheDay = self.wordBank[self.hashCurrDate(
         ) % numFiveLetterWords].upper()
+
+    def getWordBank(self):
+        return self.wordBank
 
     def setWordOfTheDay(self, word: str):
         self.wordOfTheDay = word.upper()

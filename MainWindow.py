@@ -212,15 +212,13 @@ class MainWindow(QMainWindow):
             self.displayTempMsg("Still the same day.", "pink", 3000)
 
     def reset(self):
-        for guess in self.wordleGrid.wordleRows:
-            guess.reset()
+
         self.clearCache()
         self.resetCurrCol()
         self.wordleGrid.reset()
+        self.wordleGrid.pickWordForTheDay()
         self.keyboard.reset()
         self.clipBoardButton.setEnabled(False)
-        self.wordleGrid.isDone = False
-        self.wordleGrid.isWinner = False
         self.gameOverWindow = None
 
     def appendToCache(self, word):
@@ -281,6 +279,7 @@ class MainWindow(QMainWindow):
                                 len(dict["correct"]) == 5)
                             self.wordleGrid.nextGuess()
                             if self.wordleGrid.isWinner or self.wordleGrid.getGuessCount() == 6:
+
                                 loop = asyncio.new_event_loop()
                                 loop.run_until_complete(self.sendDiscordMessage(
                                     self.wordleGrid.createPuzzleResults()))
