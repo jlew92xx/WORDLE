@@ -161,10 +161,10 @@ class WordleSolver:
     def bestFirstGuess(self):
         wordbank = self.grid.getWordBank()
         guessbank = self.listOfWords
-        output = "belch"
-        outputCountWrong = 28
+        output = "clomp"
+        outputCountWrong = 23
 
-        for guess in guessbank[178:]:
+        for guess in guessbank[(2314 + 10195):]:
             count = 0
             for word in wordbank:
                 self.grid.setWordOfTheDay(word)
@@ -177,6 +177,7 @@ class WordleSolver:
             if count < outputCountWrong:
                 outputCountWrong = count
                 output = guess
+                print(output + " " + str(outputCountWrong))
 
         print("The word, " + output + " is your best first guess with " +
               outputCountWrong + " failures")
@@ -188,5 +189,5 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     ws = WordleSolver()
     ws.bestFirstGuess()
-    # ws.grid.setWordOfTheDay("BLEED")
-    # ws.solve("EERIE")
+    # ws.grid.setWordOfTheDay("SALET")
+    # ws.solve("EARTH")

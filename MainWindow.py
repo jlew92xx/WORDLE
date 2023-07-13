@@ -253,7 +253,8 @@ class MainWindow(QMainWindow):
             keyInt = e.key()
             currGuess = self.wordleGrid.currWordleRow
             if (isinstance(currGuess, WordleRow)):
-                if (keyInt >= 65 and keyInt <= 132 or keyInt >= 97 and keyInt <= 122):
+
+                if ((keyInt >= 65 and keyInt <= 90) or (keyInt >= 97 and keyInt <= 122)):
 
                     if (self.currCol < 4):
                         self.currCol += 1
@@ -318,9 +319,9 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == '__main__':
-    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+    # os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 
     app = QApplication(sys.argv)
-    app.setAttribute(Qt.AA_EnableHighDpiScaling)
+    # app.setAttribute(Qt.AA_EnableHighDpiScaling)
     window = MainWindow()
     sys.exit(app.exec())
