@@ -9,7 +9,7 @@ from KeyBoard import KeyBoard
 from enums import Status
 import pyperclip
 from GameOverWindow import GameOverWindow
-from discord import Webhook
+# from discord import Webhook
 import asyncio
 import aiohttp
 # import enchant
@@ -241,12 +241,12 @@ class MainWindow(QMainWindow):
             self.gameOverWindow = GameOverWindow(self)
         self.gameOverWindow.show()
 
-    async def sendDiscordMessage(self, msg):
-        async with aiohttp.ClientSession() as session:
+    # async def sendDiscordMessage(self, msg):
+    #     async with aiohttp.ClientSession() as session:
 
-            webHook = Webhook.from_url(
-                "https://discord.com/api/webhooks/1127398517942517791/VVTL1nHMkN4virf0BTX3QrOWb3OXLJvZyLCjmXZ6ltt_Nbcdfg-5ld1iubGhEHsoPyoB", session=session)
-            await webHook.send(self.name+"'s results:\n"+msg)
+    #         webHook = Webhook.from_url(
+    #             "https://discord.com/api/webhooks/1127398517942517791/VVTL1nHMkN4virf0BTX3QrOWb3OXLJvZyLCjmXZ6ltt_Nbcdfg-5ld1iubGhEHsoPyoB", session=session)
+    #         await webHook.send(self.name+"'s results:\n"+msg)
 
     def keyPressEvent(self, e: QKeyEvent) -> None:
         if not self.wordleGrid.isDone:
@@ -281,10 +281,10 @@ class MainWindow(QMainWindow):
                             self.wordleGrid.nextGuess()
                             if self.wordleGrid.isWinner or self.wordleGrid.getGuessCount() == 6:
 
-                                loop = asyncio.new_event_loop()
-                                loop.run_until_complete(self.sendDiscordMessage(
-                                    self.wordleGrid.createPuzzleResults()))
-                                loop.close()
+                                # loop = asyncio.new_event_loop()
+                                # loop.run_until_complete(self.sendDiscordMessage(
+                                # self.wordleGrid.createPuzzleResults()))
+                                # loop.close()
 
                                 self.showGameOverWindow()
                                 self.wordleGrid.isDone = True
