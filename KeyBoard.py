@@ -52,7 +52,7 @@ class KeyboardButton(QPushButton):
         return self.color
 
     def setNonLetterSize(self):
-        self.setFixedSize(QSize(60, HEIGHT))
+        self.setFixedSize(QSize(75, HEIGHT))
 
     def getKey(self):
         return self.key
