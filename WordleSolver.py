@@ -118,7 +118,7 @@ class WordleSolver:
         listOfWordsCopy = self.listOfWords.copy()
         while (not (self.grid.isDone or self.grid.isWinner)):
 
-            # print(currGuess)
+            print(currGuess)
             self.grid.currWordleRow.quickSet(currGuess)
             dict = self.grid.evalSubmission2()
             correctList = dict["correct"]
@@ -188,6 +188,7 @@ class WordleSolver:
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ws = WordleSolver()
-    ws.bestFirstGuess()
-    # ws.grid.setWordOfTheDay("SALET")
-    # ws.solve("EARTH")
+    # ws.bestFirstGuess()
+    ws.grid.setWordOfTheDay("BRUTE")
+    ws.solve("ariel")
+    print(ws.grid.createPuzzleResults())

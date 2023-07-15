@@ -20,8 +20,11 @@ class WordleBox(QTextEdit):
         self.setEnabled(False)
         self.setAutoFillBackground(True)
         font = QFont()
-        font.setPointSize(30)
+        font.setPointSize(45)
         self.setFont(font)
+        self.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
     def setIndex(self, i):
         self.index = i
@@ -37,6 +40,8 @@ class WordleBox(QTextEdit):
 
     def setBoxColor(self, color: QColor):
         p = self.palette()
+        self.setHtml(
+            "<p align=\"center\" valign=\"middle\"><font color=\"white\">"+self.toPlainText())
         p.setColor(self.viewport().backgroundRole(), color)
         self.viewport().setPalette(p)
 
