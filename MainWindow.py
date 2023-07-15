@@ -1,7 +1,7 @@
 import sys
 import os
 from PyQt5.QtWidgets import QApplication, QButtonGroup, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget, QPushButton, QMainWindow, QDialog, QLineEdit, QFormLayout, QGroupBox
-from PyQt5.QtGui import QColor, QFont, QKeyEvent, QIcon
+from PyQt5.QtGui import QColor, QFont, QKeyEvent, QIcon, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QSize
 from WordleRow import WordleRow
 import WordleGrid
@@ -183,7 +183,16 @@ class MainWindow(QMainWindow):
         wordleButton.clicked.connect(self.centerText)
 
         refreshButton = QPushButton()
-        refreshButton.setIcon(QIcon("icon\\refresh.png"))
+        # refresh icon
+        refreshIcon = QIcon()
+        refreshIcon.addPixmap(
+            QPixmap("Icons\\refresh-active.png"), QIcon.Mode.Active)
+        refreshIcon.addPixmap(
+            QPixmap("Icons\\refresh-inactive.png"), QIcon.Mode.Disabled)
+
+        refreshButton.setIcon(refreshIcon)
+        refreshButton.setEnabled(False)
+
         refreshButton.setIconSize(QSize(50, 50))
         refreshButton.setFixedSize(QSize(50, 50))
         refreshButton.clicked.connect(self.refresh)
@@ -191,7 +200,7 @@ class MainWindow(QMainWindow):
         buttonGroup = QButtonGroup()
         buttonGroup.addButton(refreshButton)
         refreshButton.setStyleSheet("border: 0px;")
-        layout.setSpacing(0)
+        layout.setSpacing(100)
         layout.addWidget(wordleButton, alignment=Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(refreshButton, alignment=Qt.AlignmentFlag.AlignRight)
         wordleButton.setStyleSheet("border: 0px;"
