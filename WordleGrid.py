@@ -94,6 +94,7 @@ class WordleGrid(QWidget):
         for guess in self.wordleRows:
             guess.reset()
         self.currTurn = 0
+        self.currWordleRow = self.wordleRows[0]
 
     def hashCurrDate(self):
         currDate = str(date.today()) + "SALT"

@@ -1,19 +1,22 @@
 import sys
 import os
 from PyQt5.QtWidgets import QApplication, QButtonGroup, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget, QPushButton, QMainWindow, QDialog, QLineEdit, QFormLayout, QGroupBox
-from PyQt5.QtGui import QColor, QFont, QKeyEvent, QIcon, QPixmap
+from PyQt5.QtGui import QColor, QFont, QKeyEvent, QIcon, QPixmap, QMouseEvent
 from PyQt5.QtCore import Qt, QTimer, QSize
 from WordleRow import WordleRow
 import WordleGrid
 from KeyBoard import KeyBoard
 from enums import Status
 import pyperclip
+import time
 from GameOverWindow import GameOverWindow
 from discord import Webhook
 import asyncio
 import aiohttp
 # import enchant
 import webbrowser
+import ctypes
+import threading
 
 
 # d = enchant.Dict("en_US")
@@ -53,6 +56,14 @@ class MainWindow(QMainWindow):
         self.layout2 = QVBoxLayout()
         self.clipBoardButton = QPushButton("Copy Results to Clipboard")
         self.layout2.setSpacing(3)
+        # refresh icon
+        refreshIconClicked = QIcon("Icons\\refreshed-clicked.png")
+        refreshIconNormal = QIcon("Icons\\refresh-active.png")
+        refreshIconInactive = QIcon("Icons\\refresh-inactive.png")
+        self.refreshButton = myButton(
+            refreshIconClicked, refreshIconNormal, refreshIconInactive)
+        self.refreshButton.setEnabled(False)
+
         self.toolBar = self.createToolbar()
         self.layout2.addWidget(self.toolBar)
         self.layout2.setAlignment(
@@ -131,6 +142,10 @@ class MainWindow(QMainWindow):
             self.dialog.setLayout(mainLayout)
             self.dialog.show()
 
+        refreshThread = threading.Thread(target=self.checkNewDay)
+        refreshThread.daemon = True
+        refreshThread.start()
+
     def setName(self):
         self.name = self.nameLineEdit.text()
         file = open(PROFILE_PATH, 'w')
@@ -182,27 +197,17 @@ class MainWindow(QMainWindow):
         wordleButton.setFixedSize(QSize(200, 75))
         wordleButton.clicked.connect(self.centerText)
 
-        refreshButton = QPushButton()
-        # refresh icon
-        refreshIcon = QIcon()
-        refreshIcon.addPixmap(
-            QPixmap("Icons\\refresh-active.png"), QIcon.Mode.Active)
-        refreshIcon.addPixmap(
-            QPixmap("Icons\\refresh-inactive.png"), QIcon.Mode.Disabled)
-
-        refreshButton.setIcon(refreshIcon)
-        refreshButton.setEnabled(False)
-
-        refreshButton.setIconSize(QSize(50, 50))
-        refreshButton.setFixedSize(QSize(50, 50))
-        refreshButton.clicked.connect(self.refresh)
+        self.refreshButton.setIconSize(QSize(50, 50))
+        self.refreshButton.setFixedSize(QSize(50, 50))
+        self.refreshButton.clicked.connect(self.refresh)
 
         buttonGroup = QButtonGroup()
-        buttonGroup.addButton(refreshButton)
-        refreshButton.setStyleSheet("border: 0px;")
-        layout.setSpacing(100)
+        buttonGroup.addButton(self.refreshButton)
+        self.refreshButton.setStyleSheet("border: 0px;")
+        layout.setSpacing(75)
         layout.addWidget(wordleButton, alignment=Qt.AlignmentFlag.AlignHCenter)
-        layout.addWidget(refreshButton, alignment=Qt.AlignmentFlag.AlignRight)
+        layout.addWidget(self.refreshButton,
+                         alignment=Qt.AlignmentFlag.AlignRight)
         wordleButton.setStyleSheet("border: 0px;"
                                    "color: white;"
                                    "alignment: center")
@@ -213,12 +218,18 @@ class MainWindow(QMainWindow):
     def centerText(self):
         webbrowser.open("https://www.youtube.com/watch?v=xvFZjo5PgG0")
 
-    def refresh(self):
-        if self.wordleGrid.isDifferentDay():
-            self.reset()
+    def checkNewDay(self):
+        while (True):
 
-        else:
-            self.displayTempMsg("Still the same day.", "pink", 3000)
+            if self.wordleGrid.isDifferentDay():
+                self.refreshButton.setEnabled(True)
+
+            time.sleep(10)
+
+    def refresh(self):
+
+        self.reset()
+        self.refreshButton.setEnabled(False)
 
     def reset(self):
 
@@ -325,6 +336,32 @@ class MainWindow(QMainWindow):
                             "CAN YOU EVEN COUNT!", "pink", 2000)
 
         return super().keyPressEvent(e)
+
+
+class myButton(QPushButton):
+    def __init__(self, clicked: QFont, normal: QFont, inactive: QFont):
+        super().__init__()
+        self.clickedIcon = clicked
+        self.normalIcon = normal
+        self.inactiveIcon = inactive
+        self.setIcon(normal)
+
+    def mousePressEvent(self, e: QMouseEvent) -> None:
+
+        self.setIcon(self.clickedIcon)
+        return super().mousePressEvent(e)
+
+    def mouseReleaseEvent(self, e: QMouseEvent) -> None:
+        self.setIcon(self.normalIcon)
+        return super().mouseReleaseEvent(e)
+
+    def setEnabled(self, a0: bool) -> None:
+        # if (a0):
+        #     self.setIcon(self.normalIcon)
+        # else:
+        #     self.setIcon(self.inactiveIcon)
+
+        return super().setEnabled(a0)
 
 
 if __name__ == '__main__':
