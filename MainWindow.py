@@ -319,9 +319,9 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == '__main__':
-    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+    # os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 
     app = QApplication(sys.argv)
-    app.setAttribute(Qt.AA_EnableHighDpiScaling)
+    # app.setAttribute(Qt.AA_EnableHighDpiScaling)
     window = MainWindow()
     sys.exit(app.exec())
