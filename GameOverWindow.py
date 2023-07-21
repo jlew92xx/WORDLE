@@ -13,7 +13,7 @@ class GameOverWindow(QWidget):
         self.setWindowIcon(app_icon)
         layout = QVBoxLayout()
         solver = WordleSolver()
-        solver.solve("SALET")
+        solver.solve()
         botGrid = solver.grid
 
         layout.addWidget(botGrid, 0, Qt.AlignmentFlag.AlignHCenter)
