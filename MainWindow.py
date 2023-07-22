@@ -214,8 +214,8 @@ class MainWindow(QMainWindow):
 
         self.finishButton.setIconSize(QSize(50, 50))
         self.finishButton.setFixedSize(QSize(50, 50))
-        # self.finishButton.clicked.connect(self.refresh)
-
+        self.finishButton.clicked.connect(self.showGameOverWindow)
+ 
         buttonLayout.addWidget(
             self.finishButton, alignment=Qt.AlignmentFlag.AlignRight)
         buttonLayout.addWidget(
