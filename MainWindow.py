@@ -1,6 +1,6 @@
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QButtonGroup, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget, QPushButton, QMainWindow, QDialog, QLineEdit, QFormLayout, QGroupBox
+from PyQt5.QtWidgets import QApplication, QButtonGroup, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget, QPushButton, QMainWindow, QDialog, QLineEdit, QFormLayout, QGroupBox, QSpacerItem
 from PyQt5.QtGui import QColor, QFont, QKeyEvent, QIcon, QPixmap, QMouseEvent
 from PyQt5.QtCore import Qt, QTimer, QSize
 from WordleRow import WordleRow
@@ -56,13 +56,20 @@ class MainWindow(QMainWindow):
         self.layout2 = QVBoxLayout()
         self.clipBoardButton = QPushButton("Copy Results to Clipboard")
         self.layout2.setSpacing(3)
-        # refresh icon
+        # refresh button
         refreshIconClicked = QIcon("Icons\\refreshed-clicked.png")
         refreshIconNormal = QIcon("Icons\\refresh-active.png")
         refreshIconInactive = QIcon("Icons\\refresh-inactive.png")
         self.refreshButton = myButton(
             refreshIconClicked, refreshIconNormal, refreshIconInactive)
         self.refreshButton.setEnabled(False)
+
+        finishIconClicked = QIcon("Icons\\finish-clicked.png")
+        finishIconNormal = QIcon("Icons\\finish-active.png")
+        finishIconInactive = QIcon("Icons\\finish-clicked.png")
+        self.finishButton = myButton(
+            finishIconClicked, finishIconNormal, finishIconInactive)
+        self.finishButton.setEnabled(False)
 
         self.toolBar = self.createToolbar()
         self.layout2.addWidget(self.toolBar)
@@ -176,6 +183,7 @@ class MainWindow(QMainWindow):
             pastPuzzle) == 6
         if (self.wordleGrid.isDone):
             self.clipBoardButton.setEnabled(True)
+            self.finishButton.setEnabled(True)
 
     def copyToClipboard(self):
 
@@ -193,6 +201,9 @@ class MainWindow(QMainWindow):
 
         wordleButton = QPushButton("Wordle")
 
+        buttonWidget = QWidget()
+        buttonLayout = QHBoxLayout()
+
         wordleButton.setFont(QFont('Arial Black', 25))
         wordleButton.setFixedSize(QSize(200, 75))
         wordleButton.clicked.connect(self.centerText)
@@ -201,16 +212,26 @@ class MainWindow(QMainWindow):
         self.refreshButton.setFixedSize(QSize(50, 50))
         self.refreshButton.clicked.connect(self.refresh)
 
-        buttonGroup = QButtonGroup()
-        buttonGroup.addButton(self.refreshButton)
+        self.finishButton.setIconSize(QSize(50, 50))
+        self.finishButton.setFixedSize(QSize(50, 50))
+        # self.finishButton.clicked.connect(self.refresh)
+
+        buttonLayout.addWidget(
+            self.finishButton, alignment=Qt.AlignmentFlag.AlignRight)
+        buttonLayout.addWidget(
+            self.refreshButton, alignment=Qt.AlignmentFlag.AlignRight)
+
+        buttonWidget.setLayout(buttonLayout)
+
         self.refreshButton.setStyleSheet("border: 0px;")
-        layout.setSpacing(75)
+        layout.setSpacing(0)
         layout.addWidget(wordleButton, alignment=Qt.AlignmentFlag.AlignHCenter)
-        layout.addWidget(self.refreshButton,
-                         alignment=Qt.AlignmentFlag.AlignRight)
         wordleButton.setStyleSheet("border: 0px;"
                                    "color: white;"
                                    "alignment: center")
+
+        layout.addWidget(buttonWidget,
+                         alignment=Qt.AlignmentFlag.AlignRight)
 
         output.setLayout(layout)
         return output
@@ -239,6 +260,7 @@ class MainWindow(QMainWindow):
         self.wordleGrid.pickWordForTheDay()
         self.keyboard.reset()
         self.clipBoardButton.setEnabled(False)
+        self.finishButton.setEnabled(False)
         self.gameOverWindow = None
 
     def appendToCache(self, word):
@@ -309,6 +331,7 @@ class MainWindow(QMainWindow):
                                 self.showGameOverWindow()
                                 self.wordleGrid.isDone = True
                                 self.clipBoardButton.setEnabled(True)
+                                self.finishButton.setEnabled(True)
                                 if (self.wordleGrid.isWinner):
                                     if self.wordleGrid.getGuessCount() <= 2:
                                         self.displayTempMsg(
@@ -339,7 +362,7 @@ class MainWindow(QMainWindow):
 
 
 class myButton(QPushButton):
-    def __init__(self, clicked: QFont, normal: QFont, inactive: QFont):
+    def __init__(self, clicked: QIcon, normal: QIcon, inactive: QIcon):
         super().__init__()
         self.clickedIcon = clicked
         self.normalIcon = normal

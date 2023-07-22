@@ -101,8 +101,6 @@ class WordleSolver:
 
         score /= (5 - len(set(word)) + 1)
         freq = zipf_frequency(word, "en")/100
-        if (attempt == 6):
-            print("stop here")
         score = score / (attempt)
         freq *= (attempt)
         score += freq
@@ -166,7 +164,8 @@ class WordleSolver:
 
             self.grid.isWinner = (len(correctList) == 5)
             self.grid.nextGuess()
-            if (self.grid.isWinner):
+            self.grid.isDone = (self.grid.getGuessCount() == 6)
+            if (self.grid.isWinner or self.grid.isDone):
                 break
             for tp in correctList:
                 self.setCorrectChar(tp)
@@ -192,10 +191,9 @@ class WordleSolver:
             listCount = self.countByLetter(inWordList + correctList)
             listOfWordsCopy = self.regrexList(listOfWordsCopy, listCount)
 
-            self.grid.isDone = (self.grid.getGuessCount() == 6)
             currGuess = self.wordFreakAnalysis(listOfWordsCopy).upper()
 
-        # print(self.grid.createPuzzleResults())
+        print(self.grid.createPuzzleResults())
 
     def bestFirstGuess(self):
         guessbank = self.listOfWords
@@ -258,6 +256,7 @@ class WordleSolver:
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ws = WordleSolver()
-    # ws.solve()
+    ws.grid.setWordOfTheDay("burly")
+    ws.solve()
     #
-    ws.postScoreLoop()
+    # ws.postScoreLoop()
