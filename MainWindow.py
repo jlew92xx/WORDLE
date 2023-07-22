@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
         self.nameEntryForm = None
         self.nameLineEdit = None
 
-        app_icon = QIcon('Icons\MainIconGOOD.png')
+        app_icon = QIcon('MainIconGOOD.png')
         self.setWindowIcon(app_icon)
         self.centralWidget.setWindowIcon(app_icon)
         # self.setFixedSize(600,950)
@@ -57,16 +57,16 @@ class MainWindow(QMainWindow):
         self.clipBoardButton = QPushButton("Copy Results to Clipboard")
         self.layout2.setSpacing(3)
         # refresh button
-        refreshIconClicked = QIcon("Icons\\refreshed-clicked.png")
-        refreshIconNormal = QIcon("Icons\\refresh-active.png")
-        refreshIconInactive = QIcon("Icons\\refresh-inactive.png")
+        refreshIconClicked = QIcon("refreshed-clicked.png")
+        refreshIconNormal = QIcon("refresh-active.png")
+        refreshIconInactive = QIcon("refresh-inactive.png")
         self.refreshButton = myButton(
             refreshIconClicked, refreshIconNormal, refreshIconInactive)
         self.refreshButton.setEnabled(False)
 
-        finishIconClicked = QIcon("Icons\\finish-clicked.png")
-        finishIconNormal = QIcon("Icons\\finish-active.png")
-        finishIconInactive = QIcon("Icons\\finish-clicked.png")
+        finishIconClicked = QIcon("finish-clicked.png")
+        finishIconNormal = QIcon("finish-active.png")
+        finishIconInactive = QIcon("finish-clicked.png")
         self.finishButton = myButton(
             finishIconClicked, finishIconNormal, finishIconInactive)
         self.finishButton.setEnabled(False)
@@ -388,9 +388,9 @@ class myButton(QPushButton):
 
 
 if __name__ == '__main__':
-    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+    #os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 
     app = QApplication(sys.argv)
-    app.setAttribute(Qt.AA_EnableHighDpiScaling)
+    #app.setAttribute(Qt.AA_EnableHighDpiScaling)
     window = MainWindow()
     sys.exit(app.exec())

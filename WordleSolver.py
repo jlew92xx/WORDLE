@@ -32,7 +32,7 @@ class WordleSolver:
         self.listOfWords = self.grid.buildTempList()
         letterCount = Counter(chain.from_iterable(self.listOfWords))
         self.letterFreq = {
-            character: value / letterCount.total()
+            character: value / sum(letterCount.values())
             for character, value in letterCount.items()
         }
         print(self.letterFreq)
@@ -256,7 +256,5 @@ class WordleSolver:
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ws = WordleSolver()
-    ws.grid.setWordOfTheDay("burly")
-    ws.solve()
-    #
-    # ws.postScoreLoop()
+
+    ws.postScoreLoop()

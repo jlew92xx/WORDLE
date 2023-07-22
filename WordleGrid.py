@@ -6,8 +6,8 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
 from enums import Status
 
-wordBank_Path = "Wordbank\Wordle-La.txt"
-guessBank_Path = "Wordbank\Wordle-Ta.txt"
+wordBank_Path = "Wordle-La.txt"
+guessBank_Path = "Wordle-Ta.txt"
 correctColor = QColor(106, 170, 100)
 inWordColor = QColor(201, 180, 88)
 incorrectColor = QColor(120, 124, 126)
