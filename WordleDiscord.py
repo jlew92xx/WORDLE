@@ -15,7 +15,7 @@ class DiscordGameBot:
     def __init__(self) -> None:
 
         TOKEN = "MTEyNzM0Mjk4MzYyNTMyNjYxMg.GfWMk1."
-        token += "1jHNWvWdnw_l-AvVA9gYh8DwvlKGNKWL0N5ghQ"
+        TOKEN += "1jHNWvWdnw_l-AvVA9gYh8DwvlKGNKWL0N5ghQ"
         client = discord.Client()
 
         @client.event
