@@ -8,8 +8,9 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "MainWindow.py",
+            //"program": "MainWindow.py",
             //"program": "WordleSolver.py",
+            "program": "WordleDiscord.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }
