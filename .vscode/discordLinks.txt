@@ -1,0 +1,5 @@
+INVITELINK =https://discord.com/api/oauth2/authorize?client_id=1127342983625326612&permissions=534723950656&scope=bot
+
+TOKEN =MTEyNzM0Mjk4MzYyNTMyNjYxMg.GOeSrt.H32CNUngp4nQRGJjobweODx2Vcb9h39ePrvM4A
+
+CLIENTID = 1127342983625326612
