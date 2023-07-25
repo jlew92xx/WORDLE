@@ -64,6 +64,7 @@ class WordleRow(QWidget):
         for box in self.boxes:
             if (isinstance(box, WordleBox)):
                 ch = box.toPlainText()
+
                 al = actual[n]
                 if al == ch:
                     box.setBoxColor(self.correctColor)

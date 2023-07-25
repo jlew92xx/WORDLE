@@ -152,6 +152,9 @@ class MainWindow(QMainWindow):
         refreshThread = threading.Thread(target=self.checkNewDay)
         refreshThread.daemon = True
         refreshThread.start()
+        
+    def setName2(self, name):
+        self.name = name
 
     def setName(self):
         self.name = self.nameLineEdit.text()
@@ -171,7 +174,7 @@ class MainWindow(QMainWindow):
     def replayTheCache(self, pastPuzzle: list):
         n = 0
         for row in pastPuzzle:
-            word = row.rstrip()
+            word = row.rstrip().upper()
             curr = self.wordleGrid.wordleRows[n]
             curr.quickSet(word)
             dict = self.wordleGrid.evalSubmission()
@@ -282,6 +285,12 @@ class MainWindow(QMainWindow):
         if self.gameOverWindow == None:
             self.gameOverWindow = GameOverWindow(self)
         self.gameOverWindow.show()
+    
+    def setOntop(self):
+        self.setWindowFlag(Qt.WindowStaysOnTopHint)
+        
+    def createFileName(self, userName):
+        return userName+str(self.wordleGrid.getPuzzleNumber())+".txt"
 
     async def sendDiscordMessage(self, msg):
         async with aiohttp.ClientSession() as session:
@@ -290,6 +299,18 @@ class MainWindow(QMainWindow):
                 "https://discord.com/api/webhooks/1127398517942517791/VVTL1nHMkN4virf0BTX3QrOWb3OXLJvZyLCjmXZ6ltt_Nbcdfg-5ld1iubGhEHsoPyoB", session=session)
             await webHook.send(self.name+"'s results:\n"+msg)
 
+    def isDone(self):
+        return self.wordleGrid.isDone
+    
+    def isWinner(self):
+        return self.wordleGrid.isWinner
+    
+    def isWord(self, word):
+        return self.wordleGrid.isWord(word)
+    
+    def createPuzzleResults(self):
+        return self.wordleGrid.createPuzzleResults()
+    
     def keyPressEvent(self, e: QKeyEvent) -> None:
         if not self.wordleGrid.isDone:
             keyInt = e.key()
