@@ -22,7 +22,7 @@ class DiscordGameBot:
     
     def __init__(self, app) -> None:
         self.client = discord.Client(intents= discord.Intents.default())
-        self.mainwindow = MainWindow(True)
+        self.mainwindow = MainWindow()
         self.mainwindow.wordleGrid.setWordOfTheDay("xrays")
         self.Today = None
         # self.secondsToTomorrow = Ults.getTimeSleep(HOUR)

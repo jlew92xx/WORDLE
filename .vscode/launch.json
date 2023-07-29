@@ -8,9 +8,9 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            //"program": "MainWindow.py",
+            "program": "WordleMain.py",
             //"program": "WordleSolver.py",
-            "program": "WordleDiscord.py",
+            //"program": "WordleDiscord.py",
             //"program": "ChatBot.py",
             "console": "integratedTerminal",
             "justMyCode": true

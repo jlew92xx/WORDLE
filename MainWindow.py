@@ -32,11 +32,10 @@ class MainWindow(QMainWindow):
     unknownColor = QColor(211, 214, 218)
     name = ""
 
-    def __init__(self, isForDiscord,*args, **kwargs):
+    def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
         self.centralWidget = QWidget()
-        if(isForDiscord):
-            self.setWindowFlag(Qt.WindowStaysOnTopHint)
+        self.setWindowFlag(Qt.WindowStaysOnTopHint)
         self.gameOverWindow = None
         self.nameEntryForm = None
         self.nameLineEdit = None
@@ -87,23 +86,7 @@ class MainWindow(QMainWindow):
         self.clipBoardButton.setEnabled(False)
         self.clipBoardButton.clicked.connect(self.copyToClipboard)
 
-        lines = []
-        if os.path.isfile(CACHE_PATH):
-            file = open(CACHE_PATH, 'r')
-            lines = file.readlines()
-            file.close()
 
-        if len(lines) > 0:
-            # if puzzle in cache is yesterdays
-            if int(lines[0]) != self.wordleGrid.getPuzzleNumber():
-                self.clearCache()
-                self.appendToCache(str(self.wordleGrid.getPuzzleNumber()))
-            else:
-                lines.pop(0)  # remove the puzzle number from the list
-                self.replayTheCache(lines)
-
-        else:
-            self.appendToCache(str(self.wordleGrid.getPuzzleNumber()))
 
         self.disappearingLabel = QLabel()
         self.disappearingLabel.setFont(QFont('Arial Black', 12))
@@ -343,10 +326,4 @@ class myButton(QPushButton):
         return super().setEnabled(a0)
 
 
-if __name__ == '__main__':
-    #os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 
-    app = QApplication(sys.argv)
-    #app.setAttribute(Qt.AA_EnableHighDpiScaling)
-    window = MainWindow(False)
-    sys.exit(app.exec())
