@@ -15,7 +15,6 @@ import asyncio
 import aiohttp
 # import enchant
 import webbrowser
-import ctypes
 import threading
 
 
@@ -33,10 +32,11 @@ class MainWindow(QMainWindow):
     unknownColor = QColor(211, 214, 218)
     name = ""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, isForDiscord,*args, **kwargs):
         super().__init__(*args, **kwargs)
         self.centralWidget = QWidget()
-
+        if(isForDiscord):
+            self.setWindowFlag(Qt.WindowStaysOnTopHint)
         self.gameOverWindow = None
         self.nameEntryForm = None
         self.nameLineEdit = None
@@ -149,9 +149,9 @@ class MainWindow(QMainWindow):
             self.dialog.setLayout(mainLayout)
             self.dialog.show()
 
-        refreshThread = threading.Thread(target=self.checkNewDay)
-        refreshThread.daemon = True
-        refreshThread.start()
+        # refreshThread = threading.Thread(target=self.checkNewDay)
+        # refreshThread.daemon = True
+        # refreshThread.start()
         
     def setName2(self, name):
         self.name = name
@@ -174,20 +174,25 @@ class MainWindow(QMainWindow):
     def replayTheCache(self, pastPuzzle: list):
         n = 0
         for row in pastPuzzle:
-            word = row.rstrip().upper()
-            curr = self.wordleGrid.wordleRows[n]
-            curr.quickSet(word)
-            dict = self.wordleGrid.evalSubmission()
-            self.keyboard.findButtonsToChangeColors(dict)
-            self.wordleGrid.isWinner = (len(dict["correct"]) == 5)
-            self.wordleGrid.nextGuess()
-            n += 1
-        self.wordleGrid.isDone = self.wordleGrid.isWinner or len(
-            pastPuzzle) == 6
+            self.submitOneWord(row)
+
+    def submitOneWord(self, word):
+        word = word.rstrip().upper()
+        curr = self.wordleGrid.getCurrentTurn()
+        curr.quickSet(word)
+        dict = self.wordleGrid.evalSubmission()
+        self.keyboard.findButtonsToChangeColors(dict)
+        self.wordleGrid.isWinner = (len(dict["correct"]) == 5)
+        self.wordleGrid.nextGuess()
+        
+        self.wordleGrid.isDone = self.isWinner() or self.wordleGrid.getGuessCount() == 6
         if (self.wordleGrid.isDone):
             self.clipBoardButton.setEnabled(True)
             self.finishButton.setEnabled(True)
-
+        
+                      
+            
+        
     def copyToClipboard(self):
 
         pyperclip.copy(self.wordleGrid.createPuzzleResults())
@@ -260,7 +265,7 @@ class MainWindow(QMainWindow):
         self.clearCache()
         self.resetCurrCol()
         self.wordleGrid.reset()
-        self.wordleGrid.pickWordForTheDay()
+        #self.wordleGrid.pickWordForTheDay()
         self.keyboard.reset()
         self.clipBoardButton.setEnabled(False)
         self.finishButton.setEnabled(False)
@@ -286,11 +291,10 @@ class MainWindow(QMainWindow):
             self.gameOverWindow = GameOverWindow(self)
         self.gameOverWindow.show()
     
-    def setOntop(self):
-        self.setWindowFlag(Qt.WindowStaysOnTopHint)
+    
         
     def createFileName(self, userName):
-        return userName+str(self.wordleGrid.getPuzzleNumber())+".txt"
+        return "TEMP" +str(self.wordleGrid.getPuzzleNumber())+"_"+ userName + ".txt"
 
     async def sendDiscordMessage(self, msg):
         async with aiohttp.ClientSession() as session:
@@ -311,76 +315,7 @@ class MainWindow(QMainWindow):
     def createPuzzleResults(self):
         return self.wordleGrid.createPuzzleResults()
     
-    def keyPressEvent(self, e: QKeyEvent) -> None:
-        if not self.wordleGrid.isDone:
-            keyInt = e.key()
-            currGuess = self.wordleGrid.currWordleRow
-            if (isinstance(currGuess, WordleRow)):
-
-                if ((keyInt >= 65 and keyInt <= 90) or (keyInt >= 97 and keyInt <= 122)):
-
-                    if (self.currCol < 4):
-                        self.currCol += 1
-                        currGuess.setBox(self.currCol, e.text().upper())
-
-                elif (keyInt == self.BACK_SPACE):
-                    if (self.currCol > -1):
-
-                        currGuess.setBox(self.currCol, "")
-
-                        if (self.currCol != -2):
-                            self.currCol -= 1
-                elif (keyInt == self.ENTER_SUBMIT):
-
-                    submittedWord = currGuess.getWordStr()
-                    if (len(submittedWord) == 5):
-
-                        if self.wordleGrid.isWord(submittedWord):
-                            self.appendToCache(submittedWord)
-                            dict = self.wordleGrid.evalSubmission()
-                            self.keyboard.findButtonsToChangeColors(dict)
-                            self.wordleGrid.isWinner = (
-                                len(dict["correct"]) == 5)
-                            self.wordleGrid.nextGuess()
-                            if self.wordleGrid.isWinner or self.wordleGrid.getGuessCount() == 6:
-
-                                loop = asyncio.new_event_loop()
-                                loop.run_until_complete(self.sendDiscordMessage(
-                                    self.wordleGrid.createPuzzleResults()))
-                                loop.close()
-
-                                self.showGameOverWindow()
-                                self.wordleGrid.isDone = True
-                                self.clipBoardButton.setEnabled(True)
-                                self.finishButton.setEnabled(True)
-                                if (self.wordleGrid.isWinner):
-                                    if self.wordleGrid.getGuessCount() <= 2:
-                                        self.displayTempMsg(
-                                            "YOU CHEATIN' SoB", "green", 3000)
-                                    elif self.wordleGrid.getGuessCount() > 2 and self.wordleGrid.getGuessCount() <= 4:
-                                        self.displayTempMsg(
-                                            "Well, you're slightly above average. BIG DEAL", "yellow", 6000)
-                                    else:
-                                        self.displayTempMsg(
-                                            "You solved it. Barely.", "lightgrey", 2000)
-
-                                else:
-                                    self.displayTempMsg("Loser!", "red", 10000)
-                                    webbrowser.open(
-                                        "https://www.youtube.com/watch?v=eNynxWZK30A")
-
-                            self.resetCurrCol()
-
-                        else:
-                            self.displayTempMsg(
-                                "\""+submittedWord+"\" is not an English word, Idiot!!!", "pink", 2000)
-
-                    else:
-                        self.displayTempMsg(
-                            "CAN YOU EVEN COUNT!", "pink", 2000)
-
-        return super().keyPressEvent(e)
-
+    
 
 class myButton(QPushButton):
     def __init__(self, clicked: QIcon, normal: QIcon, inactive: QIcon):
@@ -413,5 +348,5 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
     #app.setAttribute(Qt.AA_EnableHighDpiScaling)
-    window = MainWindow()
+    window = MainWindow(False)
     sys.exit(app.exec())

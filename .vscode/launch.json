@@ -11,6 +11,7 @@
             //"program": "MainWindow.py",
             //"program": "WordleSolver.py",
             "program": "WordleDiscord.py",
+            //"program": "ChatBot.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }

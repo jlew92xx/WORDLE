@@ -155,6 +155,9 @@ class WordleGrid(QWidget):
 
     def getGuessCount(self):
         return self.currTurn
+    
+    def getCurrentTurn(self)->WordleRow:
+        return self.currWordleRow
 
     def nextGuess(self):
         self.currTurn = self.currTurn + 1

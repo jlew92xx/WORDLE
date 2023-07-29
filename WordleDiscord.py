@@ -1,48 +1,77 @@
 import discord
 from discord.ext.commands import Bot
-import sys, os
+import sys, os, glob
 from PyQt5.QtWidgets import QApplication
 from PyQt5 import QtWidgets
 from MainWindow import MainWindow
 import time
+import ChatBot
+import Ults
+from datetime import datetime, timedelta
+from pathlib import Path
 import threading
 
-
+HOUR = 0
+FILEPREFIX = "TEMP"
+TOKEN = "MTEyNzM0Mjk4MzYyNTMyNjYxMg.GfWMk1."
+TOKEN += "1jHNWvWdnw_l-AvVA9gYh8DwvlKGNKWL0N5ghQ"
 class DiscordGameBot:
-    currentGames = []
+    lastPictureMsg = {}
     mainwindow = None
+    unlocked = True
     
     def __init__(self, app) -> None:
-
-        self.mainwindow = MainWindow()
-        
+        self.client = discord.Client(intents= discord.Intents.default())
+        self.mainwindow = MainWindow(True)
+        self.mainwindow.wordleGrid.setWordOfTheDay("xrays")
+        self.Today = None
+        # self.secondsToTomorrow = Ults.getTimeSleep(HOUR)
+        # resetThread = threading.Thread(target=self.resetRoutine)
+        # resetThread.daemon = True
+        # resetThread.start()
         
         self.app = app
         
         self.startDiscord()
         
 
-        
+    def resetRoutine(self):
 
-        
-        
+
+        for filename in glob.glob("./" + FILEPREFIX + "*"):
+            os.remove(filename) 
+        lastPictureMsg = {}
+        self.mainwindow.wordleGrid.pickWordForTheDay()
+        #self.secondsToTomorrow = 86400 # how many seconds there are in a day.
+            
+    
     def startDiscord(self):
 
-        TOKEN = "MTEyNzM0Mjk4MzYyNTMyNjYxMg.GfWMk1."
-        TOKEN += "1jHNWvWdnw_l-AvVA9gYh8DwvlKGNKWL0N5ghQ"
-        client = discord.Client(intents= discord.Intents.default())
-
-        @client.event
+        @self.client.event
         async def on_ready():
-            print(f'{client.user} is now running')
+            print(f'{self.client.user} is now running')
+            self.Today = datetime.today().date()
             
-        @client.event
-        async def on_message(message):
+        @self.client.event
+        async def on_message(message ):
+            msgDate =message.created_at - timedelta(hours=5)
+            if(msgDate.date() != self.Today):
+                self.Today = datetime.today()
+                self.resetRoutine()
+                
             channelType = message.channel.type.name
-            print(channelType)
-            if message.author.bot or channelType == 'text':
+            if channelType == 'text':
                 return
-            
+            if message.author.bot:
+                if message.attachments:
+                    userNameFile = Path(message.attachments[0].filename).with_suffix('').name
+                    try:
+                        lastPicMsg = await message.channel.fetch_message(self.lastPictureMsg[userNameFile])
+                        await lastPicMsg.delete()
+                    except:
+                        pass
+                    self.lastPictureMsg[userNameFile] = message.id
+                return
             username = str(message.author)
             userMessage = str(message.content).lower()
             channel = str(message.channel)
@@ -51,8 +80,7 @@ class DiscordGameBot:
             filename = self.mainwindow.createFileName(username)
             if(not os.path.isfile(filename)):
                 if userMessage == "play":
-                    self.currentGames.append(username)
-                    filename = self.mainwindow.createFileName(username)
+                    
                     with open(filename, 'w') as f:
                         pass
                     
@@ -66,37 +94,64 @@ class DiscordGameBot:
                 lines = file.readlines()
                 file.close()
                 
-                self.mainwindow.reset()
                 self.mainwindow.replayTheCache(lines)
                 
                 if (not self.mainwindow.isDone()):
                     if(len(userMessage) == 5):
                         submittedWord = userMessage.upper().rstrip()
-                        if(self.mainwindow.isWord(userMessage)):
-                            lines.append(submittedWord)
+                        if(self.mainwindow.isWord(submittedWord)):
                             
-                            self.mainwindow.reset()
-                            self.mainwindow.replayTheCache(lines)
-                            self.app.processEvents()
-                            time.sleep(.25)
-                            await self.captureScreenShotAndSend(message, username)
-                            if(self.mainwindow.isDone()):
-                                try:
-                                    self.mainwindow.setName2(username)
-                                    msg = self.mainwindow.createPuzzleResults()
-                                    await self.mainwindow.sendDiscordMessage(msg)
-                                except:
-                                    print("WHATS GOING ON HERE")
-                                if(self.mainwindow.isWinner()):
-                                    await message.author.send("YOU WON!!")
-                                else:
-                                    await message.author.send("You're a loser.")
-                                    
+                            
+                            while (True):
+                                if(self.unlocked):
+                                    self.unlocked = False
+                                    self.mainwindow.submitOneWord(submittedWord)
+                                    self.app.processEvents()
+                                    time.sleep(.1)
+                                    self.unlocked = True
+                                    await self.captureScreenShotAndSend(message, username)
 
-             
-                            file = open(filename, 'w')
-                            for line in lines:
-                                file.write(line.rstrip() + '\n')
+                                    break
+                                else:
+                                    time.sleep(.03)
+   
+                            if(self.mainwindow.isDone()):
+                                wod = self.mainwindow.wordleGrid.wordOfTheDay
+                                # try:
+                                #     self.mainwindow.setName2(username)
+                                #     msg = self.mainwindow.createPuzzleResults()
+                                #     if(username != "jayloo92#7867"):
+                                #         await self.mainwindow.sendDiscordMessage(msg)
+                                # except:
+                                #     pass
+                                
+
+                                eogMsg = ""
+                                lines.append(submittedWord)
+                                guessesCommas = ", ".join(lines) 
+                                if(self.mainwindow.isWinner()):
+                                    guessCount = self.mainwindow.wordleGrid.getGuessCount()
+                                    prompt = ""
+                                    if guessCount <= 3:
+                                        prompt = username +" won today's Wordle game with " + str(guessCount) +" guesses. Congratulate them in the style of GLaDOS. The word of the day was "+ wod
+                                         
+                                    elif(guessCount > 3 and guessCount < 5):
+                                        prompt = username +" just did an average in today's Wordle with" + str(guessCount) +" guesses. Congratulate them in the style of GLaDOS. The word of the day was "+ wod
+                                        
+                                    else:
+                                        prompt = username +" barely won today's Wordle with " + str(guessCount) + "'Congratulate' them in the style of GLaDOS. The word of the day is "+ wod
+                                    
+                                else:
+                                    prompt = "Mercilessly mock "+username +" for losing today's wordle when the word of the day is " + wod +". Do it in the style of GLaDOS"
+                                
+                                eogMsg = ChatBot.giveResponse(prompt+ ". Your name is WordBot.")
+                                await message.author.send(eogMsg)
+                                print(eogMsg +"Msg")
+                            
+
+
+                            file = open(filename, 'a')
+                            file.write(submittedWord.rstrip() + '\n')
                             file.close
                             
                         else:
@@ -104,14 +159,19 @@ class DiscordGameBot:
                     
                     else:
                         await message.author.send("Learn how to count!")
-                        
-                else:
-                    await message.author.send("You're done! Leave me alone!")                     
                 
-
             
 
-        client.run(TOKEN)
+                     
+                else:
+                    await message.author.send("You're done! Leave me alone!")
+            
+                self.mainwindow.reset()
+                self.app.processEvents()                  
+                
+
+
+        self.client.run(TOKEN)
     
     async def postScores(self):
         channel = Bot.get_channel(1127398485369557092)
@@ -125,10 +185,7 @@ class DiscordGameBot:
         self.mainwindow = mw
         
     async def captureScreenShotAndSend(self, message, userName):
-        # self.mainwindow.setOntop()
-        # self.mainwindow.show()
-        # self.app.processEvents()
-        # time.sleep(.3)
+
         screen = QtWidgets.QApplication.primaryScreen()
         screenShot = screen.grabWindow(self.mainwindow.winId())
         fileName = userName +".jpg"
