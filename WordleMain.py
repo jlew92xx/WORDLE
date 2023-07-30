@@ -16,7 +16,8 @@ class WordleMain(MainWindow):
     
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
-        #self.setWindowFlag(~Qt.WindowStaysOnTopHint)
+
+        self.show()
         lines = []
         if os.path.isfile(CACHE_PATH):
             file = open(CACHE_PATH, 'r')

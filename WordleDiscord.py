@@ -196,10 +196,6 @@ class DiscordGameBot:
             
         except  Exception as e:
             time.sleep(.1)
-            screen = QtWidgets.QApplication.primaryScreen()
-            screenShot = screen.grabWindow(self.mainwindow.winId())
-            screenShot.save(fileName, 'jpg')
-            await message.author.send("",file = discord.File(fileName))
             
 
     async def receiveMessage(self):
