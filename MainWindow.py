@@ -157,7 +157,8 @@ class MainWindow(QMainWindow):
     def replayTheCache(self, pastPuzzle: list):
         n = 0
         for row in pastPuzzle:
-            self.submitOneWord(row)
+            if row.rstrip() != "done":
+                self.submitOneWord(row)
 
     def submitOneWord(self, word):
         word = word.rstrip().upper()

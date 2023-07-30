@@ -23,7 +23,6 @@ class DiscordGameBot:
     def __init__(self, app) -> None:
         self.client = discord.Client(intents= discord.Intents.default())
         self.mainwindow = MainWindow()
-        self.mainwindow.wordleGrid.setWordOfTheDay("xrays")
         self.Today = None
         # self.secondsToTomorrow = Ults.getTimeSleep(HOUR)
         # resetThread = threading.Thread(target=self.resetRoutine)
@@ -54,10 +53,7 @@ class DiscordGameBot:
             
         @self.client.event
         async def on_message(message ):
-            msgDate =message.created_at - timedelta(hours=5)
-            if(msgDate.date() != self.Today):
-                self.Today = datetime.today()
-                self.resetRoutine()
+
                 
             channelType = message.channel.type.name
             if channelType == 'text':
@@ -72,9 +68,16 @@ class DiscordGameBot:
                         pass
                     self.lastPictureMsg[userNameFile] = message.id
                 return
+            
+            msgDate =message.created_at - timedelta(hours=5)
+            if(msgDate.date() != self.Today):
+                self.Today = msgDate.date()
+                self.resetRoutine()
+                
             username = str(message.author)
             userMessage = str(message.content).lower()
             channel = str(message.channel)
+            
             
             print(f"{username} said '{userMessage}' {(channel)}")
             filename = self.mainwindow.createFileName(username)
@@ -94,17 +97,24 @@ class DiscordGameBot:
                 lines = file.readlines()
                 file.close()
                 
-                self.mainwindow.replayTheCache(lines)
                 
-                if (not self.mainwindow.isDone()):
+                isDone = False
+                if(not len(lines) == 0):
+                    if(lines[-1].rstrip() == "done"):
+                        isDone = True
+                if (not isDone):
                     if(len(userMessage) == 5):
                         submittedWord = userMessage.upper().rstrip()
                         if(self.mainwindow.isWord(submittedWord)):
-                            
-                            
+                            file = open(filename, 'a')
+                            file.write(submittedWord.rstrip() + '\n')
+                            file.close
+                            self.mainwindow.reset()
+                            self.app.processEvents()
                             while (True):
                                 if(self.unlocked):
                                     self.unlocked = False
+                                    self.mainwindow.replayTheCache(lines)
                                     self.mainwindow.submitOneWord(submittedWord)
                                     self.app.processEvents()
                                     time.sleep(.1)
@@ -113,17 +123,21 @@ class DiscordGameBot:
 
                                     break
                                 else:
-                                    time.sleep(.03)
+                                    time.sleep(.13)
    
                             if(self.mainwindow.isDone()):
                                 wod = self.mainwindow.wordleGrid.wordOfTheDay
-                                # try:
-                                #     self.mainwindow.setName2(username)
-                                #     msg = self.mainwindow.createPuzzleResults()
-                                #     if(username != "jayloo92#7867"):
-                                #         await self.mainwindow.sendDiscordMessage(msg)
-                                # except:
-                                #     pass
+                                
+                                file = open(filename, 'a')
+                                file.write("done" + '\n')
+                                file.close
+                                try:
+                                    self.mainwindow.setName2(username)
+                                    msg = self.mainwindow.createPuzzleResults()
+                                    if(username != "jayloo92#7867"):
+                                        await self.mainwindow.sendDiscordMessage(msg)
+                                except:
+                                    pass
                                 
 
                                 eogMsg = ""
@@ -150,12 +164,11 @@ class DiscordGameBot:
                             
 
 
-                            file = open(filename, 'a')
-                            file.write(submittedWord.rstrip() + '\n')
-                            file.close
+
                             
                         else:
-                            await message.author.send("English words please.")
+                            msgWrong = ChatBot.giveResponse("The user is playing Wordle and just submitted the 'word'," + submittedWord + "that's not a word. You, WordBot, need to tell them this in the style of Glados in one sentence.")
+                            await message.author.send(msgWrong)
                     
                     else:
                         await message.author.send("Learn how to count!")
