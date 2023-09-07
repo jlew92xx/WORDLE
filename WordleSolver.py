@@ -157,7 +157,7 @@ class WordleSolver:
 
             print(currGuess)
             self.grid.currWordleRow.quickSet(currGuess)
-            dict = self.grid.evalSubmission2()
+            dict = self.grid.evalSubmission()
             correctList = dict["correct"]
             inWordList = dict["inword"]
             incorrectList = dict["incorrect"]

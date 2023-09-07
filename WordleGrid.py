@@ -56,10 +56,6 @@ class WordleGrid(QWidget):
     used for the WordleSolver class. returns dict that includes the index as well
     '''
 
-    def evalSubmission2(self):
-        if isinstance(self.currWordleRow, WordleRow):
-            return self.currWordleRow.evalSubmission2(self.getWordOfTheDay())
-
     def getPuzzleNumber(self):
         delta = date.today() - EPOCH_DATE
         return delta.days

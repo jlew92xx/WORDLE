@@ -10,7 +10,9 @@
             "request": "launch",
             //"program": "WordleMain.py",
             //"program": "WordleSolver.py",
-            "program": "WordleDiscord.py",
+            //"program": "WordleDiscord.py",
+            //"program": "WordleSQL.py",
+            "program": "Ults.py",
             //"program": "ChatBot.py",
             "console": "integratedTerminal",
             "justMyCode": true

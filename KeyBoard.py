@@ -117,21 +117,31 @@ class KeyBoard(QWidget):
         self.keyboardLayout.addWidget(thirdRowWidget)
 
     def findButtonsToChangeColors(self, dict):
+        # inword = dict["inword"]
+        # correct = dict["correct"]
+        # incorrect = dict["incorrect"]
+        # for button in self.letterKeys:
+        #     if (button.getBoxColor() is not Color.GREEN and button.getBoxColor() is not Color.DARK_GREY):
+        #         #This is the button k value
+        #         k = button.getKey()
+                
+        #         if
+        
         for c in dict["inword"]:
             for button in self.letterKeys:
                 if (isinstance(button, KeyboardButton)):
                     if (button.getBoxColor() is not Color.GREEN):
-                        if (c == button.getKey()):
+                        if (c[0] == button.getKey()):
                             button.setBoxColor(Color.YELLOW)
         for c in dict["correct"]:
             for button in self.letterKeys:
                 if (isinstance(button, KeyboardButton)):
-                    if (c == button.getKey()):
+                    if (c[0] == button.getKey()):
                         button.setBoxColor(Color.GREEN)
 
         for c in dict["incorrect"]:
             for button in self.letterKeys:
                 if (isinstance(button, KeyboardButton)):
                     if (button.getBoxColor() is not Color.GREEN and button.getBoxColor() is not Color.YELLOW):
-                        if (c == button.getKey()):
+                        if (c[0] == button.getKey()):
                             button.setBoxColor(Color.DARK_GREY)

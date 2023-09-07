@@ -30,6 +30,7 @@ class MainWindow(QMainWindow):
     inWordColor = QColor(201, 180, 88)
     incorrectColor = QColor(120, 124, 126)
     unknownColor = QColor(211, 214, 218)
+    hta = []
     name = ""
 
     def __init__(self,*args, **kwargs):
@@ -155,7 +156,7 @@ class MainWindow(QMainWindow):
     '''
 
     def replayTheCache(self, pastPuzzle: list):
-        n = 0
+
         for row in pastPuzzle:
             if row.rstrip() != "done":
                 self.submitOneWord(row)

@@ -53,45 +53,8 @@ class WordleRow(QWidget):
 
         return output
 
+    
     def evalSubmission(self, actual: str):
-        output = {"correct": [], "inword": [], "incorrect": []}
-        n = 0
-        # check for green
-        ch = ""
-        actual = actual.upper()
-        notCorrectBoxes = []
-        correctedEquiv = ""
-        for box in self.boxes:
-            if (isinstance(box, WordleBox)):
-                ch = box.toPlainText()
-
-                al = actual[n]
-                if al == ch:
-                    box.setBoxColor(self.correctColor)
-                    # box.rotateAndChangeColor(self.correctColor)
-                    box.setStatus(Status.CORRECT)
-                    output["correct"].append(ch)
-                else:
-                    notCorrectBoxes.append(box)
-                    correctedEquiv += al
-
-                n += 1
-
-        for box in notCorrectBoxes:
-            if (isinstance(box, WordleBox)):
-                ch = box.toPlainText()
-                if ch in correctedEquiv:
-                    box.setBoxColor(self.inWordColor)
-                    box.setStatus(Status.INWORD)
-                    output["inword"].append(ch)
-                    correctedEquiv = correctedEquiv.replace(ch, '', 1)
-                else:
-                    output["incorrect"].append(ch)
-                    box.setBoxColor(self.incorrectColor)
-                    box.setStatus(Status.INCORRECT)
-        return output
-
-    def evalSubmission2(self, actual: str):
         output = {"correct": [], "inword": [], "incorrect": []}
         n = 0
         # check for green

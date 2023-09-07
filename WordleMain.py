@@ -16,7 +16,7 @@ class WordleMain(MainWindow):
     
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        
         self.show()
         lines = []
         if os.path.isfile(CACHE_PATH):

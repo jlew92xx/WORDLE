@@ -6,19 +6,23 @@ from PyQt5 import QtWidgets
 from MainWindow import MainWindow
 import time
 import ChatBot
-import Ults
+import math
 from datetime import datetime, timedelta
 from pathlib import Path
+from WordleSQL import WordleSQL
 import threading
 
 HOUR = 0
 FILEPREFIX = "TEMP"
 TOKEN = "MTEyNzM0Mjk4MzYyNTMyNjYxMg.GfWMk1."
 TOKEN += "1jHNWvWdnw_l-AvVA9gYh8DwvlKGNKWL0N5ghQ"
+guildId = 1127338015249944596
+todaysWordlers = 'todays-wordlers'
 class DiscordGameBot:
     lastPictureMsg = {}
     mainwindow = None
     unlocked = True
+    playStat = WordleSQL()
     
     def __init__(self, app) -> None:
         self.client = discord.Client(intents= discord.Intents.default())
@@ -35,12 +39,16 @@ class DiscordGameBot:
         
 
     def resetRoutine(self):
-
-
+        
+        self.playStat.dailyReset()
         for filename in glob.glob("./" + FILEPREFIX + "*"):
             os.remove(filename) 
         lastPictureMsg = {}
-        self.mainwindow.wordleGrid.pickWordForTheDay()
+        
+        if(self.mainwindow.wordleGrid.getPuzzleNumber() == 69):
+            self.mainwindow.wordleGrid.setWordOfTheDay("BOOBS")
+        else:
+            self.mainwindow.wordleGrid.pickWordForTheDay()
         #self.secondsToTomorrow = 86400 # how many seconds there are in a day.
             
     
@@ -50,9 +58,10 @@ class DiscordGameBot:
         async def on_ready():
             print(f'{self.client.user} is now running')
             self.Today = datetime.today().date()
-            
+
+
         @self.client.event
-        async def on_message(message ):
+        async def on_message(message):
 
                 
             channelType = message.channel.type.name
@@ -69,21 +78,39 @@ class DiscordGameBot:
                     self.lastPictureMsg[userNameFile] = message.id
                 return
             
-            msgDate =message.created_at - timedelta(hours=5)
+            msgDate = message.created_at - timedelta(hours=5)
             if(msgDate.date() != self.Today):
                 self.Today = msgDate.date()
                 self.resetRoutine()
                 
             username = str(message.author)
-            userMessage = str(message.content).lower()
+            userMessage = str(message.content)
             channel = str(message.channel)
-            
-            
             print(f"{username} said '{userMessage}' {(channel)}")
+            self.playStat.insertPlayer(username)
+            if(userMessage.startswith('!')):
+                userMessage = userMessage.replace("!", "")
+                command = userMessage.split("=")
+                if(len(command) == 2):
+                    commandWord = command[0].lower().strip()
+                    paramWord = command[1].strip()
+                    
+                    if commandWord == "person":
+                        self.playStat.setPrompt(username, paramWord)
+                        await message.author.send("Your personality has been set.")
+                    else:
+                        await message.author.send("Invalid Command.")
+                else:
+                    await message.author.send("Invalid Command.")
+                    
+                    
+                return
+            userMessage = userMessage.lower()
+            
             filename = self.mainwindow.createFileName(username)
             if(not os.path.isfile(filename)):
                 if userMessage == "play":
-                    
+                    self.playStat.insertPlayer(username)
                     with open(filename, 'w') as f:
                         pass
                     
@@ -97,10 +124,10 @@ class DiscordGameBot:
                 lines = file.readlines()
                 file.close()
                 
-                
+                wod = self.mainwindow.wordleGrid.wordOfTheDay
                 isDone = False
                 if(not len(lines) == 0):
-                    if(lines[-1].rstrip() == "done"):
+                    if(lines[-1].rstrip() == "done" or len(lines) > 6):
                         isDone = True
                 if (not isDone):
                     if(len(userMessage) == 5):
@@ -116,6 +143,7 @@ class DiscordGameBot:
                                     self.unlocked = False
                                     self.mainwindow.replayTheCache(lines)
                                     self.mainwindow.submitOneWord(submittedWord)
+
                                     self.app.processEvents()
                                     time.sleep(.1)
                                     self.unlocked = True
@@ -126,7 +154,7 @@ class DiscordGameBot:
                                     time.sleep(.13)
    
                             if(self.mainwindow.isDone()):
-                                wod = self.mainwindow.wordleGrid.wordOfTheDay
+                                
                                 
                                 file = open(filename, 'a')
                                 file.write("done" + '\n')
@@ -142,32 +170,61 @@ class DiscordGameBot:
 
                                 eogMsg = ""
                                 lines.append(submittedWord)
-                                guessesCommas = ", ".join(lines) 
+                                guessesCommas = ", ".join(lines)
+                                self.playStat.updateAfterGame(username, self.mainwindow.isWinner(), self.mainwindow.wordleGrid.getGuessCount())
+                                person = self.playStat.getPrompt(username)
                                 if(self.mainwindow.isWinner()):
                                     guessCount = self.mainwindow.wordleGrid.getGuessCount()
                                     prompt = ""
+                                    
                                     if guessCount <= 3:
-                                        prompt = username +" won today's Wordle game with " + str(guessCount) +" guesses. Congratulate them in the style of GLaDOS. The word of the day was "+ wod
+                                        prompt = username +" won today's Wordle game with " + str(guessCount) +" guesses. In less than 2000 characters, Congratulate them in the style of " + person + ". The word of the day was "+ wod + ". Their guess were " + guessesCommas
                                          
                                     elif(guessCount > 3 and guessCount < 5):
-                                        prompt = username +" just did an average in today's Wordle with" + str(guessCount) +" guesses. Congratulate them in the style of GLaDOS. The word of the day was "+ wod
+                                        prompt = username +" just did an average in today's Wordle with" + str(guessCount) +" guesses. In less than 2000 characters, Congratulate them in the style of " + person + ". The word of the day was "+ wod +". Their guess were " + guessesCommas
                                         
                                     else:
-                                        prompt = username +" barely won today's Wordle with " + str(guessCount) + "'Congratulate' them in the style of GLaDOS. The word of the day is "+ wod
+                                        prompt = username +" barely won today's Wordle with " + str(guessCount) + "In less than 2000 characters,'Congratulate' them in the style of " + person + ". The word of the day is "+ wod +". Their guess were " + guessesCommas
                                     
                                 else:
-                                    prompt = "Mercilessly mock "+username +" for losing today's wordle when the word of the day is " + wod +". Do it in the style of GLaDOS"
+                                    prompt = "In less than 2000 characters, Mercilessly mock "+username +" for losing today's wordle when the word of the day is " + wod +". Do it in the style of" + person + ""
                                 
-                                eogMsg = ChatBot.giveResponse(prompt+ ". Your name is WordBot.")
-                                await message.author.send(eogMsg)
-                                print(eogMsg +"Msg")
+                                eogMsg = ChatBot.giveResponse(prompt+ ".")
+                                print(eogMsg)
+                                lenMsg = len(eogMsg)
+                                if(lenMsg < 2000):
+                                    await message.author.send(eogMsg)
+                                else:
+                                    total = 0
+                                    limit = 2000
+                                    sending = ""
+                                    listMsg = eogMsg.split('\n')
+                                    total = 0
+                                    for line in listMsg:
+                                        if total + line(line) > limit:
+                                          await message.author.send(sending[:-1])
+                                          total = len(line)
+                                          sending = line + "\n"
+                                        else:
+                                            total += len(line)
+                                            sending += line + "\n"
+                                            
+                                    await message.author.send(sending[:-1]) 
+                                    
+                                    
+                                
+                                    
+                                    
+                                    
                             
 
 
 
                             
                         else:
-                            msgWrong = ChatBot.giveResponse("The user is playing Wordle and just submitted the 'word'," + submittedWord + "that's not a word. You, WordBot, need to tell them this in the style of Glados in one sentence.")
+                            
+                            msgWrong = "Not in the word database!"
+                                
                             await message.author.send(msgWrong)
                     
                     else:
