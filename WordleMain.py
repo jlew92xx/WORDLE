@@ -59,40 +59,44 @@ class WordleMain(MainWindow):
                 submittedWord = currGuess.getWordStr()
                 if (len(submittedWord) == 5):
                     if self.wordleGrid.isWord(submittedWord):
-                        self.appendToCache(submittedWord)
-                        dict = self.wordleGrid.evalSubmission()
-                        self.keyboard.findButtonsToChangeColors(dict)
-                        self.wordleGrid.isWinner = (
-                            len(dict["correct"]) == 5)
-                        self.wordleGrid.nextGuess()
-                        if self.wordleGrid.isWinner or self.wordleGrid.getGuessCount() == 6:
+                        if self.wordleGrid.isHardModeComplient():
+                            self.appendToCache(submittedWord)
+                            dict = self.wordleGrid.evalSubmission()
+                            self.keyboard.findButtonsToChangeColors(dict)
+                            self.wordleGrid.isWinner = (
+                                len(dict["correct"]) == 5)
+                            self.wordleGrid.nextGuess()
+                            if self.wordleGrid.isWinner or self.wordleGrid.getGuessCount() == 6:
 
-                            # loop = asyncio.new_event_loop()
-                            # loop.run_until_complete(self.sendDiscordMessage(
-                            #     self.wordleGrid.createPuzzleResults()))
-                            # loop.close()
+                                # loop = asyncio.new_event_loop()
+                                # loop.run_until_complete(self.sendDiscordMessage(
+                                #     self.wordleGrid.createPuzzleResults()))
+                                # loop.close()
 
-                            self.showGameOverWindow()
-                            self.wordleGrid.isDone = True
-                            self.clipBoardButton.setEnabled(True)
-                            self.finishButton.setEnabled(True)
-                            if (self.wordleGrid.isWinner):
-                                if self.wordleGrid.getGuessCount() <= 2:
-                                    self.displayTempMsg(
-                                        "YOU CHEATIN' SoB", "green", 3000)
-                                elif self.wordleGrid.getGuessCount() > 2 and self.wordleGrid.getGuessCount() <= 4:
-                                    self.displayTempMsg(
-                                        "Well, you're slightly above average. BIG DEAL", "yellow", 6000)
+                                self.showGameOverWindow()
+                                self.wordleGrid.isDone = True
+                                self.clipBoardButton.setEnabled(True)
+                                self.finishButton.setEnabled(True)
+                                if (self.wordleGrid.isWinner):
+                                    if self.wordleGrid.getGuessCount() <= 2:
+                                        self.displayTempMsg(
+                                            "YOU CHEATIN' SoB", "green", 3000)
+                                    elif self.wordleGrid.getGuessCount() > 2 and self.wordleGrid.getGuessCount() <= 4:
+                                        self.displayTempMsg(
+                                            "Well, you're slightly above average. BIG DEAL", "yellow", 6000)
+                                    else:
+                                        self.displayTempMsg(
+                                            "You solved it. Barely.", "lightgrey", 2000)
+
                                 else:
-                                    self.displayTempMsg(
-                                        "You solved it. Barely.", "lightgrey", 2000)
+                                    self.displayTempMsg("Loser!", "red", 10000)
+                                    webbrowser.open(
+                                        "https://www.youtube.com/watch?v=eNynxWZK30A")
 
-                            else:
-                                self.displayTempMsg("Loser!", "red", 10000)
-                                webbrowser.open(
-                                    "https://www.youtube.com/watch?v=eNynxWZK30A")
-
-                        self.resetCurrCol()
+                            self.resetCurrCol()
+                        else:
+                            self.displayTempMsg(
+                            "HARD MODE is enabled!!", "pink", 2000)
 
                     else:
                         self.displayTempMsg(

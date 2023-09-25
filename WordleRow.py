@@ -28,7 +28,8 @@ class WordleRow(QWidget):
 
     def setCorrectColor(self, color: QColor):
         self.correctColor = color
-
+    def getBoxAtIndex(self, index):
+        return self.boxes[index]
     def setInWordColor(self, color: QColor):
         self.inWordColor = color
 
@@ -67,8 +68,8 @@ class WordleRow(QWidget):
                 ch = box.toPlainText()
                 al = actual[n]
                 if al == ch:
-                    # box.setBoxColor(self.correctColor)
-                    box.rotateAndChangeColor(self.correctColor)
+                    box.setBoxColor(self.correctColor)
+                    
                     box.setStatus(Status.CORRECT)
                     output["correct"].append((ch, box.getIndex()))
                 else:

@@ -26,6 +26,7 @@ class WordleGrid(QWidget):
         self.currTurn = 0
         self.isWinner = False
         self.isDone = False
+        self.hardmodeOn = False
         if len(self.wordBank) == 0:
             with open(wordBank_Path) as wb:
                 self.wordBank = wb.read().splitlines()
@@ -35,7 +36,10 @@ class WordleGrid(QWidget):
         self.puzzleNumber = self.getPuzzleNumber()
         self.wordOfTheDay = ""
         self.pickWordForTheDay()
-
+    def setHardmode(self, pHardmode):
+        self.hardmodeOn = pHardmode
+        
+    
     def buildGrid(self):
         layout = QVBoxLayout()
         layout.setSpacing(8)
@@ -93,7 +97,7 @@ class WordleGrid(QWidget):
         self.currWordleRow = self.wordleRows[0]
 
     def hashCurrDate(self):
-        currDate = str(date.today()) + "SALT"
+        currDate = str(date.today()) + "SALT1"
         output = int(hashlib.sha256(currDate.encode('utf-8')).hexdigest(), 16)
 
         return output
@@ -109,6 +113,19 @@ class WordleGrid(QWidget):
     def setWordOfTheDay(self, word: str):
         self.wordOfTheDay = word.upper()
 
+    def isHardModeComplient(self, input):
+        output = True
+        if self.currTurn > 0:
+            prevTurn = self.wordleRows[self.currTurn -1]
+            for x in range(0, 5):
+                prevBox = prevTurn.getBoxAtIndex(x)
+                if(prevBox.getStatus() == Status.CORRECT):
+                    currLetter = input[x]
+                    if prevBox.toPlainText() != currLetter:
+                        return False
+                    
+        return True
+
     def createPuzzleResults(self) -> str:
 
         if (self.isWinner):
@@ -116,7 +133,10 @@ class WordleGrid(QWidget):
         else:
             s = "⛈️"
         output = "JL's Wordle " + \
-            str(self.getPuzzleNumber()) + " " + s + "/6" + "\n\n"
+            str(self.getPuzzleNumber()) + " " + s + "/6"
+        if(self.hardmodeOn):
+            output += "💪"
+        output += "\n\n"
         for guess in self.wordleRows:
             if (isinstance(guess, WordleRow)):
                 row = guess.getRowResult()

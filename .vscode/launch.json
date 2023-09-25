@@ -11,8 +11,9 @@
             //"program": "WordleMain.py",
             //"program": "WordleSolver.py",
             //"program": "WordleDiscord.py",
-            //"program": "WordleSQL.py",
-            "program": "Ults.py",
+            //"program": "WordleWebBot.py",
+            "program": "WordleSQL.py",
+            //"program": "Ults.py",
             //"program": "ChatBot.py",
             "console": "integratedTerminal",
             "justMyCode": true

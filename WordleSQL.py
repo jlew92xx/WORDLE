@@ -1,6 +1,5 @@
 import sqlite3
-
-
+import ChatBot
 
 columnNames = ["Name", "NumberOfGuesses", "NumGamesPlayed", "Streak", "wonToday"]
 
@@ -30,9 +29,13 @@ class WordleSQL():
         pass
     
     def insertPlayer(self, name):
-        params = (name, 0, 0, 0, 0, "False", "Eric Cartman")
-        self.curs.execute("INSERT OR IGNORE INTO playerStats VALUES(?,?,?,?,?,?,?)", params)
-        self.conn.commit()
+        self.curs.execute("SELECT name FROM playerStats WHERE name = ?", (name,))
+        data=self.curs.fetchall()
+        if len(data) == 0:
+            characterName = ChatBot.giveResponse("A nonsensical hero name")
+            params = (name, 0, 0, 0, 0, "False", characterName, 0)
+            self.curs.execute("INSERT OR IGNORE INTO playerStats VALUES(?,?,?,?,?,?,?,?)", params)
+            self.conn.commit()
     
     def printTableToConsole(self):
         self.curs.execute("SELECT * FROM playerStats")
@@ -59,7 +62,7 @@ class WordleSQL():
                                         NumGamesPlayed = NumGamesPlayed + 1,
                                         NumberOfGuesses = ? + NumberOfGuesses
                                     WHERE
-                                        name = ?""", (guesses, name,))
+                                        name = ?""", (guesses + 1, name,))
             
         self.conn.commit()
     
@@ -95,11 +98,41 @@ class WordleSQL():
                                         name = ?""", (inPrompt, userName,))
         self.conn.commit()
         
-            
+    def addColumnWithDefaultValue(self, columnName, default):
+        # self.curs.execute("""ALTER TABLE playerStats
+        #                             ADD hardmode integer;
+        #                   """)
+        self.curs.execute("""UPDATE
+                                    playerStats
+                                    SET
+                                        hardmode = ?""", (default,))
+        self.conn.commit()
+        
+    def setHardMode(self, on:int, username:str):
+    
+        self.curs.execute("""UPDATE
+                                    playerStats
+                                    SET
+                                        hardmode = ?
+                                    WHERE
+                                        name = ?""", (on, username,))
+        self.conn.commit()
+    
+    def getHardmode(self, userName)->bool:
+        self.curs.execute("""select
+                                hardmode
+                            FROM
+                                playerStats
+                            WHERE
+                                name = ?""", (userName,))
+        output = self.curs.fetchone()[0]
+        if output == 1:
+            return True
+        else:
+            return False
+               
 if __name__ == '__main__':
     wsql  = WordleSQL()
-    wsql.insertPlayer("jayloo92")
-    wsql.setPrompt("jayloo92", "HITLER WITH AIDS")
-    print(wsql.getPrompt("jayloo92"))
+    wsql.setPrompt("ellily", "kawaii girl")
     
     

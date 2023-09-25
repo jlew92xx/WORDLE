@@ -11,11 +11,10 @@ import pyperclip
 import time
 from GameOverWindow import GameOverWindow
 from discord import Webhook
-import asyncio
 import aiohttp
 # import enchant
 import webbrowser
-import threading
+
 
 
 # d = enchant.Dict("en_US")
@@ -291,6 +290,10 @@ class MainWindow(QMainWindow):
     def isDone(self):
         return self.wordleGrid.isDone
     
+    
+    def setHardmode(self, pHardmode):
+        self.wordleGrid.setHardmode(pHardmode)
+        
     def isWinner(self):
         return self.wordleGrid.isWinner
     
@@ -300,7 +303,8 @@ class MainWindow(QMainWindow):
     def createPuzzleResults(self):
         return self.wordleGrid.createPuzzleResults()
     
-    
+    def isHardmodeCompliant(self, input):
+        return self.wordleGrid.isHardModeComplient(input)
 
 class myButton(QPushButton):
     def __init__(self, clicked: QIcon, normal: QIcon, inactive: QIcon):
@@ -326,6 +330,8 @@ class myButton(QPushButton):
         #     self.setIcon(self.inactiveIcon)
 
         return super().setEnabled(a0)
+    
+   
 
 
 

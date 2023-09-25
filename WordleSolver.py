@@ -23,12 +23,13 @@ class WordleSolver:
     listOfWords = []
     secondsOfSleep = 0
 
-    def __init__(self) -> None:
+    def __init__(self, grid) -> None:
         self.getTimeSleep()
         # self.secondsOfSleep = 5
-        self.grid = WordleGrid()
+        
         for n in range(0, 5):
             self.listOfRegex.append('.')
+            self.grid = grid
         self.listOfWords = self.grid.buildTempList()
         letterCount = Counter(chain.from_iterable(self.listOfWords))
         self.letterFreq = {
@@ -120,8 +121,9 @@ class WordleSolver:
 
         return output
 
-    def reset(self):
+    def reset(self, ):
         self.listOfRegex = []
+    
         for n in range(0, 5):
             self.listOfRegex.append('.')
         self.grid.reset()
@@ -238,8 +240,11 @@ class WordleSolver:
         async with aiohttp.ClientSession() as session:
             webHook = Webhook.from_url(
                 "https://discord.com/api/webhooks/1127398517942517791/VVTL1nHMkN4virf0BTX3QrOWb3OXLJvZyLCjmXZ6ltt_Nbcdfg-5ld1iubGhEHsoPyoB", session=session)
-            await webHook.send("WORDLEBOT's results 🤖:\n"+msg)
+            await webHook.send("WordBot's results 🤖:\n"+msg)
 
+    def getBotResults(self):
+        return self.grid.createPuzzleResults();
+    
     def postScoreLoop(self):
         while (True):
             time.sleep(self.secondsOfSleep)
