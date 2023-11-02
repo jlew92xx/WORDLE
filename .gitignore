@@ -6,6 +6,7 @@ __pycache__/
 # C extensions
 *.so
 game.txt
+TEMP*.txt
 profile.txt
 # Distribution / packaging
 .Python
@@ -25,6 +26,7 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+*.jpg
 MANIFEST
 
 # PyInstaller

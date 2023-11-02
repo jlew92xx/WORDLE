@@ -1,4 +1,5 @@
 import discord
+from discord.ext import tasks
 from discord.ext.commands import Bot
 import sys, os, glob
 from PyQt5.QtWidgets import QApplication
@@ -6,22 +7,39 @@ from PyQt5 import QtWidgets
 from MainWindow import MainWindow
 import time
 import ChatBot
-import math
+import asyncio
 from datetime import datetime, timedelta
 from pathlib import Path
 from WordleSQL import WordleSQL
 from WordleSolver import WordleSolver
-
-import threading
+from WordleGame import WordleGame
+#import schedule
 
 HOUR = 0
 FILEPREFIX = "TEMP"
-TOKEN = """MTEyNzM0Mjk4MzYyNTMyNjYxMg.GPrx0o.5lg86UIW0QkItot_kgIPP-pwZ5l59FunVutbBU"""
+tokenFile = open("DiscordKey.txt", 'r')
+token = tokenFile.readlines()
+print(token)
+tokenFile.close()
+TOKEN = token[0]
+
+
+def seconds_until_time(hours, minutes):
+    now = datetime.now()
+    det = 0
+    target = ((now + timedelta(days = det)).replace(hour = hours, minute=minutes, second=0))
+    diff =(target - now).total_seconds()
+    if diff < 0:
+        diff += 3600
+    return diff
+
+
 
 guildId = 1127338015249944596
 todaysWordlers = 'todays-wordlers'
 class DiscordGameBot:
     lastPictureMsg = {}
+    currGames = {}
     mainwindow = None
     unlocked = True
     playStat = WordleSQL()
@@ -31,6 +49,7 @@ class DiscordGameBot:
         intents = discord.Intents.default()
         intents.members = True
         self.client = discord.Client(intents= intents)
+        
         app = QApplication(sys.argv)
         self.mainwindow = MainWindow()
         self.solver = WordleSolver(self.mainwindow.wordleGrid)
@@ -55,15 +74,23 @@ class DiscordGameBot:
         self.mainwindow.wordleGrid.pickWordForTheDay()
         #self.secondsToTomorrow = 86400 # how many seconds there are in a day.
             
-    
+    @tasks.loop(seconds=1)
+    async def dailyResetTask():
+        print("start sleeping....")
+        await asyncio.sleep(seconds_until_time(7, 11))
+        print("it works")
+        
     def startDiscord(self):
 
         @self.client.event
         async def on_ready():
             print(f'{self.client.user} is now running')
+            
+
+            print(str(datetime.today()))
             self.Today = datetime.today().date()
-
-
+            
+            
         @self.client.event
         async def on_member_join(member: discord.Member):
             name = member.name
@@ -74,7 +101,7 @@ class DiscordGameBot:
             their New York Times Wordle in the nyt-wordle channel but you think that's an inferior wordle. Tell them to behave and be nice to the other wordlers.
             """
            
-            msg = ChatBot.giveResponse(prompt+ ".")
+            msg = ChatBot.giveResponse(prompt+ ".", "Welcome to Weer Woler! Sorry My AI failed! But here's the prompt it was suppose use:\n " + prompt)
             print(msg)
             await member.send(msg)
             
@@ -98,19 +125,13 @@ class DiscordGameBot:
                 return
             
             msgDate = message.created_at - timedelta(hours=5)
-
+            
             if(msgDate.date() != self.Today):
+
+                self.currGames = {}
                 self.Today = msgDate.date()
                 self.playStat.dailyReset()
                 self.resetRoutine()
-                
-                
-                self.solver.reset()
-                self.solver.grid = self.mainwindow.wordleGrid  
-                self.solver.solve()
-                
-                await self.solver.sendDiscordMessage(self.solver.getBotResults())
-                
                 
                 
                 
@@ -152,13 +173,19 @@ class DiscordGameBot:
             userMessage = userMessage.lower()
             
             filename = self.mainwindow.createFileName(username)
-            if(not os.path.isfile(filename)):
+            
+            fileNotCreated = not os.path.isfile(filename)
+            notInCurrGames = not username in self.currGames.keys()
+            wod = self.mainwindow.wordleGrid.wordOfTheDay
+            if(fileNotCreated):
                 if userMessage == "play":
                     self.playStat.insertPlayer(username)
+                    newGame = WordleGame(username, wod)
+                    self.currGames[username] = newGame
                     with open(filename, 'w') as f:
                         pass
                     introPrompt = "In a short single sentence, tell " + username + " that you are for them to send you five letter words for their Wordle game in the style of " + self.playStat.getPrompt(username)
-                    introMsg = ChatBot.giveResponse(introPrompt+ ".")
+                    introMsg = ChatBot.giveResponse(introPrompt+ ".", "Ready for those 5 letter tho")
                     print(introMsg)
                     await message.author.send(introMsg)
                 else:
@@ -169,142 +196,138 @@ class DiscordGameBot:
                 file = open(filename, 'r')
                 lines = file.readlines()
                 file.close()
-                wod = self.mainwindow.wordleGrid.wordOfTheDay
                 
-                isDone = False
-                if(not len(lines) == 0):
-                    if(lines[-1].rstrip() == "done" or len(lines) > 6):
-                        isDone = True
-                if (not isDone):
+                if(notInCurrGames):
+                    #create a replay and add it to the dictionary
+                    self.currGames[username] = WordleGame(username, wod)
+                    self.currGames[username].replay(lines)
+
+                if (not self.currGames[username].isDone):
                     if(len(userMessage) == 5):
                         submittedWord = userMessage.upper().rstrip()
                         if(self.mainwindow.isWord(submittedWord)):
+                        
+                            print( username + " "+str(datetime.now().second)+ "\n")
+                           
 
-                            self.mainwindow.reset()
-                            isHardmodeOn = self.playStat.getHardmode(username)
-                            self.mainwindow.setHardmode(isHardmodeOn)
+                            file = open(filename, 'a')
+                            file.write(submittedWord.rstrip() + '\n')
+                            file.close()
+                            
+                            self.currGames[username].eval(submittedWord)
+                            self.mainwindow.paintGame(self.currGames[username].guesses)
+                            self.mainwindow.evalKeyboard(self.currGames[username].keyboard)
+
+                            filenamePic = username + ".jpg"
+                            didLose = self.currGames[username].isDone and not self.currGames[username].isWinner
+                            if didLose:
+                                    self.mainwindow.showTempMsg(wod, "red")
                             self.app.processEvents()
-                            while (True):
-                                print( username + " "+str(datetime.now().second)+ "\n")
-                                if(self.unlocked):
-                                    self.unlocked = False
-                                    self.mainwindow.replayTheCache(lines)
-                                    if not isHardmodeOn or self.mainwindow.isHardmodeCompliant(submittedWord):
-                                        file = open(filename, 'a')
-                                        file.write(submittedWord.rstrip() + '\n')
-                                        file.close()
-                                        self.mainwindow.submitOneWord(submittedWord)
-
-                                        self.app.processEvents()
-                                        
-                                        self.unlocked = True
-                                        filenamePic = username + ".jpg"
-                                        self.captureScreenShot(filenamePic)
-                                        try:
-                                            await message.author.send("",file = discord.File(filenamePic))
-                                            print(username +" Message sent at " + str(datetime.now()))
-                                            break
-                                        except  Exception as e:
-                                            time.sleep(.1)
-                                            print("failed to send.")
-                                    else:
-                                        msgWrong = "You're in HARDMODE!"
-                                        self.unlocked = True
-                                        await message.author.send(msgWrong)
-                                        await message.author.send("",file = discord.File(username + ".jpg"))
-                                        return
-                                else:
-                                    print("This section code is locked")
-                                    time.sleep(.13)
-   
-                            if(self.mainwindow.isDone()):
+                            self.captureScreenShot(filenamePic)
+                            if didLose:
+                                self.mainwindow.hideTempMsg()
+                            self.mainwindow.reset()
+                            self.app.processEvents()
+                            try:
                                 
+                                await message.author.send("",file = discord.File(filenamePic))
+                                print(username +" Message sent at " + str(datetime.now()))
                                 
-                                file = open(filename, 'a')
-                                file.write("done" + '\n')
-                                file.close
-                                try:
-                                    self.mainwindow.setName2(username)
-                                    msg = self.mainwindow.createPuzzleResults()
-                                    if(username != "jayloo92test"):
-                                        await self.mainwindow.sendDiscordMessage(msg)
-                                    else:
-                                        print(msg)
-                                except:
-                                    pass
-                                
-
-                                eogMsg = ""
-                                lines.append(submittedWord)
-                                guessesCommas = ", ".join(lines)
-                                self.playStat.updateAfterGame(username, self.mainwindow.isWinner(), self.mainwindow.wordleGrid.getGuessCount())
-                                person = self.playStat.getPrompt(username)
-                                if(self.mainwindow.isWinner()):
-                                    guessCount = self.mainwindow.wordleGrid.getGuessCount()
-                                    prompt = ""
-                                    
-                                    if guessCount <= 3:
-                                        prompt = username +" won today's Wordle game with " + str(guessCount) +" guesses. In less than 2000 characters, Congratulate them in the style of " + person + ". The word of the day was "+ wod + ". Their guess were " + guessesCommas
-                                         
-                                    elif(guessCount > 3 and guessCount < 5):
-                                        prompt = username +" just did an average in today's Wordle with" + str(guessCount) +" guesses. In less than 2000 characters, Congratulate them in the style of " + person + ". The word of the day was "+ wod +". Their guess were " + guessesCommas
-                                        
-                                    else:
-                                        prompt = username +" barely won today's Wordle with " + str(guessCount) + "In less than 2000 characters,'Congratulate' them in the style of " + person + ". The word of the day is "+ wod +". Their guess were " + guessesCommas
-                                    
-                                else:
-                                    prompt = "In less than 2000 characters, Mercilessly mock "+username +" for losing today's wordle when the word of the day is " + wod +". Do it in the style of" + person + ""
-                                
-                                eogMsg = ChatBot.giveResponse(prompt+ ".")
-                                print(eogMsg)
-                                lenMsg = len(eogMsg)
-                                if(lenMsg < 2000):
-                                    await message.author.send(eogMsg)
-                                else:
-                                    total = 0
-                                    limit = 2000
-                                    sending = ""
-                                    listMsg = eogMsg.split('\n')
-                                    total = 0
-                                    for line in listMsg:
-                                        if total + len(line) > limit:
-                                          await message.author.send(sending[:-1])
-                                          total = len(line)
-                                          sending = line + "\n"
-                                        else:
-                                            total += len(line)
-                                            sending += line + "\n"
+                            except  Exception as e:
+                                time.sleep(.1)
+                                print("failed to send.")
                                             
-                                    await message.author.send(sending[:-1]) 
-                                    
-                                    
-                                
-                                    
-                                    
-                                    
+
+
+
+                            if(self.currGames[username].isDone):
+
+                                    try:
+                                        self.mainwindow.setName2(username)
+                                        msg = self.currGames[username].createPuzzleResults(self.mainwindow.getPuzzleNumber())
+                                        if(username != "jayloo92test"):
+                                            await self.mainwindow.sendDiscordMessage(msg)
+                                        else:
+                                            print(msg)
+                                    except:
+                                        pass
                             
 
-
-
+                                    eogMsg = ""
+                                    lines.append(submittedWord)
+                                    guessesCommas = ", ".join(lines)
+                                    self.playStat.updateAfterGame(username, self.mainwindow.isWinner(), self.mainwindow.wordleGrid.getGuessCount())
+                                    person = self.playStat.getPrompt(username)
+                                    if(self.currGames[username].isWinner):
+                                        guessCount = self.currGames[username].guessNumber
+                                        prompt = ""
+                                        
+                                        if guessCount <= 3:
+                                            prompt = username +" won today's Wordle game with " + str(guessCount) +" guesses. In less than 1000 characters, Congratulate them in the style of " + person + ". The word of the day was "+ wod + ". Their guess were " + guessesCommas
+                                                
+                                        elif(guessCount > 3 and guessCount < 5):
+                                            prompt = username +" just did an average in today's Wordle with" + str(guessCount) +" guesses. In less than 1000 characters, Congratulate them in the style of " + person + ". The word of the day was "+ wod +". Their guess were " + guessesCommas
+                                            
+                                        else:
+                                            prompt = username +" barely won today's Wordle with " + str(guessCount) + "In less than 1000 characters,'Congratulate' them in the style of " + person + ". The word of the day is "+ wod +". Their guess were " + guessesCommas
+                                        
+                                    else:
+                                        prompt = "In less than 1000 characters, Mercilessly mock "+username +" for losing today's wordle when the word of the day is " + wod +". Do it in the style of" + person + ""
+                                        
+                                    currYear = self.Today.year
+                                    try:
+                                        if self.Today == datetime(currYear, 10, 31 ).date():
+                                            prompt += "Also wish them a happy Halloween"
+                                        elif self.Today == datetime(currYear, 12, 25).date():
+                                            prompt += "Also wish them a Merry Christmas"
+                                        elif self.Today == datetime(currYear, 1, 1).date():
+                                            prompt += "Also wish them a Happy New Year"
+                                    except:
+                                        pass
+                                    
+                                    eogMsg = ChatBot.giveResponse(prompt+ ".", "games over")
+                                    print(eogMsg)
+                                    lenMsg = len(eogMsg)
+                                    if(lenMsg < 2000):
+                                        await message.author.send(eogMsg)
+                                    else:
+                                        total = 0
+                                        limit = 2000
+                                        sending = ""
+                                        listMsg = eogMsg.split('\n')
+                                        total = 0
+                                        for line in listMsg:
+                                            if total + len(line) > limit:
+                                                print(sending)
+                                                await message.author.send(sending[:-1])
+                                                total = len(line)
+                                                sending = line + "\n"
+                                            else:
+                                                total += len(line)
+                                                sending += line + "\n"
+                                                
+                                        await message.author.send(sending[:-1]) 
+                                      
+                            
                             
                         else:
                             
                             msgWrong = "Not in the word database!"
-                                
                             await message.author.send(msgWrong)
-                            await message.author.send("",file = discord.File(username + ".jpg"))
+                            if(self.currGames[username].guessNumber > 0):
+                                await message.author.send("",file = discord.File(username + ".jpg"))
                     
                     else:
-                        await message.author.send("Learn how to count!")
-                        await message.author.send("",file = discord.File(username + ".jpg"))
+                        await message.author.send("You're currently playing a game. Please try sending a 5-letter word")
+                        if(self.currGames[username].guessNumber > 0):
+                            await message.author.send("",file = discord.File(username + ".jpg"))
             
-
                      
                 else:
                     await message.author.send("You're done! Leave me alone!")
             
-                self.mainwindow.reset()
-                self.app.processEvents()                  
+                
+                                  
                 
 
 
@@ -324,11 +347,12 @@ class DiscordGameBot:
     def captureScreenShot(self, fileName):
 
         screen = QtWidgets.QApplication.primaryScreen()
+        
         screenShot = screen.grabWindow(self.mainwindow.winId())
+        time.sleep(.1)
         screenShot.save(fileName, 'jpg')
         
 
-            
 
     async def receiveMessage(self):
         pass
@@ -336,7 +360,6 @@ class DiscordGameBot:
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    app
     x = DiscordGameBot(app)
     
 

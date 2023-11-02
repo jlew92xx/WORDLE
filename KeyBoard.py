@@ -2,11 +2,13 @@ from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtWidgets import QPushButton, QWidget, QHBoxLayout, QVBoxLayout
 from PyQt5.QtGui import QFont
 import pyautogui
-from enums import Color
+from enums import Color, Status
 DARK_GREY = "(120,124,126)"
 GREEN = "(106, 170, 100)"
 YELLOW = "(201,180,88)"
 LIGHTGREY = "(211,214,218)"
+RED = "(156, 39, 6)"
+ORANGE = "(245, 118, 26)"
 FIRST_ROW = "qwertyuiop".upper()
 SECOND_ROW = "asdfghjkl".upper()
 THIRD_ROW = "zxcvbnm".upper()
@@ -16,9 +18,10 @@ SPACING = 2
 
 
 class KeyboardButton(QPushButton):
-
+    
     def __init__(self, text, key):
         super().__init__(text)
+        
         self.setFixedSize(QSize(width, HEIGHT))
         self.color = None
         font = QFont()
@@ -62,6 +65,7 @@ class KeyBoard(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.dictKeys = {}
         self.keyboardLayout = QVBoxLayout()
         self.keyboardLayout.setSpacing(0)
         self.letterKeys = []
@@ -92,12 +96,14 @@ class KeyBoard(QWidget):
 
         for c in FIRST_ROW:
             button = KeyboardButton(c, c)
+            self.dictKeys[c] = button
             firstRowLayout.addWidget(button)
             self.letterKeys.append(button)
         firstRowWidget.setLayout(firstRowLayout)
         self.keyboardLayout.addWidget(firstRowWidget)
         for c in SECOND_ROW:
             button = KeyboardButton(c, c)
+            self.dictKeys[c] = button
             secondRowLayout.addWidget(button)
             self.letterKeys.append(button)
 
@@ -110,6 +116,7 @@ class KeyBoard(QWidget):
             button = KeyboardButton(c, c)
             thirdRowLayout.addWidget(button)
             self.letterKeys.append(button)
+            self.dictKeys[c] = button
 
         thirdRowLayout.addWidget(backBut)
 
@@ -133,6 +140,20 @@ class KeyBoard(QWidget):
                     if (button.getBoxColor() is not Color.GREEN):
                         if (c[0] == button.getKey()):
                             button.setBoxColor(Color.YELLOW)
+       
+        for c in dict["inwordred"]:
+            for button in self.letterKeys:
+                if (isinstance(button, KeyboardButton)):
+                    if (button.getBoxColor() is not Color.GREEN):
+                        if (c[0] == button.getKey()):
+                            button.setBoxColor(Color.RED)
+                            
+        for c in dict["inwordorange"]:
+            for button in self.letterKeys:
+                if (isinstance(button, KeyboardButton)):
+                    if (button.getBoxColor() is not Color.GREEN):
+                        if (c[0] == button.getKey()):
+                            button.setBoxColor(Color.ORANGE)    
         for c in dict["correct"]:
             for button in self.letterKeys:
                 if (isinstance(button, KeyboardButton)):
@@ -142,6 +163,19 @@ class KeyBoard(QWidget):
         for c in dict["incorrect"]:
             for button in self.letterKeys:
                 if (isinstance(button, KeyboardButton)):
-                    if (button.getBoxColor() is not Color.GREEN and button.getBoxColor() is not Color.YELLOW):
+                    if (button.getBoxColor() is Color.LIGHTGREY):
                         if (c[0] == button.getKey()):
                             button.setBoxColor(Color.DARK_GREY)
+                            
+    def evalKeyboard(self, keyboardDict:dict):
+        
+        for c in keyboardDict.keys():
+            button = self.dictKeys[c]
+            status = keyboardDict[c]
+            if (isinstance(button, KeyboardButton)):
+                if (status == Status.CORRECT):
+                    button.setBoxColor(Color.GREEN)
+                elif(status == Status.INWORD):
+                    button.setBoxColor(Color.YELLOW)
+                elif(status == Status.INCORRECT):
+                    button.setBoxColor(Color.DARK_GREY)

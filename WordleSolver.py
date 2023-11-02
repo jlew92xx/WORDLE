@@ -161,7 +161,7 @@ class WordleSolver:
             self.grid.currWordleRow.quickSet(currGuess)
             dict = self.grid.evalSubmission()
             correctList = dict["correct"]
-            inWordList = dict["inword"]
+            inWordList = dict["inword"] + dict["inwordred"] + dict["inwordorange"]
             incorrectList = dict["incorrect"]
 
             self.grid.isWinner = (len(correctList) == 5)
@@ -260,6 +260,7 @@ class WordleSolver:
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ws = WordleSolver()
+    grid = WordleGrid()
+    ws = WordleSolver(grid)
 
-    ws.postScoreLoop()
+    ws.solve()

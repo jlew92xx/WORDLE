@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QWidget, QMainWindow, QWhatsThis
 from WordleSolver import WordleSolver
 from PyQt5.QtCore import Qt, QEvent
 from PyQt5.QtGui import QIcon, QWhatsThisClickedEvent
-
+from WordleGrid import WordleGrid
 
 class GameOverWindow(QWidget):
     def __init__(self, parent: QMainWindow):
@@ -12,7 +12,7 @@ class GameOverWindow(QWidget):
         app_icon = QIcon('Icons\wordleBot.png')
         self.setWindowIcon(app_icon)
         layout = QVBoxLayout()
-        solver = WordleSolver()
+        solver = WordleSolver(WordleGrid())
         solver.solve()
         botGrid = solver.grid
 

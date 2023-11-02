@@ -3,18 +3,14 @@ import os
 from PyQt5.QtWidgets import QApplication, QButtonGroup, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget, QPushButton, QMainWindow, QDialog, QLineEdit, QFormLayout, QGroupBox, QSpacerItem
 from PyQt5.QtGui import QColor, QFont, QKeyEvent, QIcon, QPixmap, QMouseEvent
 from PyQt5.QtCore import Qt, QTimer, QSize
-from WordleRow import WordleRow
 import WordleGrid
 from KeyBoard import KeyBoard
-from enums import Status
 import pyperclip
 import time
 from GameOverWindow import GameOverWindow
 from discord import Webhook
 import aiohttp
 # import enchant
-import webbrowser
-
 
 
 # d = enchant.Dict("en_US")
@@ -56,19 +52,19 @@ class MainWindow(QMainWindow):
         self.clipBoardButton = QPushButton("Copy Results to Clipboard")
         self.layout2.setSpacing(3)
         # refresh button
-        refreshIconClicked = QIcon("refreshed-clicked.png")
-        refreshIconNormal = QIcon("refresh-active.png")
-        refreshIconInactive = QIcon("refresh-inactive.png")
+        refreshIconClicked = QIcon("pumpkin.png")
+        refreshIconNormal = QIcon("pumpkin.png")
+        refreshIconInactive = QIcon("pumpkin.png")
         self.refreshButton = myButton(
             refreshIconClicked, refreshIconNormal, refreshIconInactive)
-        self.refreshButton.setEnabled(False)
+        self.refreshButton.setEnabled(True)
 
-        finishIconClicked = QIcon("finish-clicked.png")
-        finishIconNormal = QIcon("finish-active.png")
-        finishIconInactive = QIcon("finish-clicked.png")
+        finishIconClicked = QIcon("dry-leaves.png")
+        finishIconNormal = QIcon("dry-leaves.png")
+        finishIconInactive = QIcon("dry-leaves.png")
         self.finishButton = myButton(
             finishIconClicked, finishIconNormal, finishIconInactive)
-        self.finishButton.setEnabled(False)
+        self.finishButton.setEnabled(True)
 
         self.toolBar = self.createToolbar()
         self.layout2.addWidget(self.toolBar)
@@ -89,7 +85,7 @@ class MainWindow(QMainWindow):
 
 
         self.disappearingLabel = QLabel()
-        self.disappearingLabel.setFont(QFont('Arial Black', 12))
+        self.disappearingLabel.setFont(QFont('Arial Black', 15))
         self.disappearingLabel.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         sp = QSizePolicy()
         sp.setRetainSizeWhenHidden(True)
@@ -175,7 +171,8 @@ class MainWindow(QMainWindow):
             self.finishButton.setEnabled(True)
         
                       
-            
+    def evalKeyboard(self, keyboardDict:dict):
+        self.keyboard.evalKeyboard(keyboardDict)     
         
     def copyToClipboard(self):
 
@@ -192,11 +189,10 @@ class MainWindow(QMainWindow):
         layout = QHBoxLayout()
 
         wordleButton = QPushButton("Wordle")
-
         buttonWidget = QWidget()
         buttonLayout = QHBoxLayout()
 
-        wordleButton.setFont(QFont('Arial Black', 25))
+        wordleButton.setFont(QFont('boulder', 40))
         wordleButton.setFixedSize(QSize(200, 75))
         wordleButton.clicked.connect(self.centerText)
 
@@ -229,7 +225,7 @@ class MainWindow(QMainWindow):
         return output
 
     def centerText(self):
-        webbrowser.open("https://www.youtube.com/watch?v=xvFZjo5PgG0")
+        pass
 
     def checkNewDay(self):
         while (True):
@@ -243,6 +239,10 @@ class MainWindow(QMainWindow):
 
         self.reset()
         self.refreshButton.setEnabled(False)
+        
+    def paintGame(self, guesses:list):
+        self.wordleGrid.paintGrid(guesses)
+            
 
     def reset(self):
 
@@ -252,7 +252,7 @@ class MainWindow(QMainWindow):
         #self.wordleGrid.pickWordForTheDay()
         self.keyboard.reset()
         self.clipBoardButton.setEnabled(False)
-        self.finishButton.setEnabled(False)
+        self.finishButton.setEnabled(True)
         self.gameOverWindow = None
 
     def appendToCache(self, word):
@@ -267,6 +267,13 @@ class MainWindow(QMainWindow):
         self.disappearingLabel.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         QTimer().singleShot(time, self.disappearingLabel.hide)
 
+    def showTempMsg(self, msg, color):
+        self.disappearingLabel.setStyleSheet("background-color: "+color)
+        self.disappearingLabel.setText(msg)
+        self.disappearingLabel.setVisible(True)
+        
+    def hideTempMsg(self):
+        self.disappearingLabel.setVisible(False)   
     def resetCurrCol(self):
         self.currCol = -1
 
@@ -279,7 +286,9 @@ class MainWindow(QMainWindow):
         
     def createFileName(self, userName):
         return "TEMP" +str(self.wordleGrid.getPuzzleNumber())+"_"+ userName + ".txt"
-
+    
+    def getPuzzleNumber(self):
+        return str(self.wordleGrid.getPuzzleNumber())
     async def sendDiscordMessage(self, msg):
         async with aiohttp.ClientSession() as session:
 

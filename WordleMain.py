@@ -59,7 +59,7 @@ class WordleMain(MainWindow):
                 submittedWord = currGuess.getWordStr()
                 if (len(submittedWord) == 5):
                     if self.wordleGrid.isWord(submittedWord):
-                        if self.wordleGrid.isHardModeComplient():
+                        if True:
                             self.appendToCache(submittedWord)
                             dict = self.wordleGrid.evalSubmission()
                             self.keyboard.findButtonsToChangeColors(dict)

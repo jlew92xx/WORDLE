@@ -147,6 +147,11 @@ class WordleGrid(QWidget):
 
                     elif (status is Status.INWORD):
                         output += "🟨"
+                    elif(status is Status.INWORDORANGE):
+                        output += "🟧"
+                        
+                    elif(status is Status.INWORDRED):
+                        output += "🟥"
 
                     elif (status is Status.INCORRECT):
                         output += "⬜"
@@ -159,7 +164,13 @@ class WordleGrid(QWidget):
 
     def getWordOfTheDay(self):
         return self.wordOfTheDay
-
+    
+    def paintGrid(self, guesses:list):
+        L = len(guesses)
+        for i in range(0, L):
+            self.wordleRows[i].paintRow(guesses[i]) 
+        
+    
     # Checks if the user guess is an actual word.
     def isWord(self, word: str) -> bool:
         key = word[:2].lower()
