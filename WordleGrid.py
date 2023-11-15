@@ -106,6 +106,7 @@ class WordleGrid(QWidget):
         numFiveLetterWords = len(self.wordBank)
         self.wordOfTheDay = self.wordBank[self.hashCurrDate(
         ) % numFiveLetterWords].upper()
+        return self.wordOfTheDay
 
     def getWordBank(self):
         return self.wordBank

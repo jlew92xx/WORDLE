@@ -14,7 +14,7 @@ from WordleSQL import WordleSQL
 from WordleSolver import WordleSolver
 from WordleGame import WordleGame
 #import schedule
-
+TESTACCOUNT = "jayloo92test"
 HOUR = 0
 FILEPREFIX = "TEMP"
 tokenFile = open("DiscordKey.txt", 'r')
@@ -54,6 +54,7 @@ class DiscordGameBot:
         self.mainwindow = MainWindow()
         self.solver = WordleSolver(self.mainwindow.wordleGrid)
         self.Today = None
+        self.todaysPuzzleNumber = self.mainwindow.wordleGrid.getPuzzleNumber()
         # self.secondsToTomorrow = Ults.getTimeSleep(HOUR)
         # resetThread = threading.Thread(target=self.resetRoutine)
         # resetThread.daemon = True
@@ -71,7 +72,7 @@ class DiscordGameBot:
         self.lastPictureMsg = {}
         
 
-        self.mainwindow.wordleGrid.pickWordForTheDay()
+        
         #self.secondsToTomorrow = 86400 # how many seconds there are in a day.
             
     @tasks.loop(seconds=1)
@@ -85,7 +86,6 @@ class DiscordGameBot:
         @self.client.event
         async def on_ready():
             print(f'{self.client.user} is now running')
-            
 
             print(str(datetime.today()))
             self.Today = datetime.today().date()
@@ -124,14 +124,15 @@ class DiscordGameBot:
                     self.lastPictureMsg[userNameFile] = message.id
                 return
             
-            msgDate = message.created_at - timedelta(hours=5)
+            msgDate = message.created_at - timedelta(hours=6)
             
-            if(msgDate.date() != self.Today):
-
+            if(self.todaysPuzzleNumber != self.mainwindow.wordleGrid.getPuzzleNumber()):
+                self.mainwindow.wordleGrid.pickWordForTheDay()
                 self.currGames = {}
-                self.Today = msgDate.date()
+                self.todaysPuzzleNumber =  self.mainwindow.wordleGrid.getPuzzleNumber()
                 self.playStat.dailyReset()
                 self.resetRoutine()
+                print("reset routines ran at message date: " +str(msgDate))
                 
                 
                 
@@ -180,14 +181,13 @@ class DiscordGameBot:
             if(fileNotCreated):
                 if userMessage == "play":
                     self.playStat.insertPlayer(username)
+                    wod = self.mainwindow.wordleGrid.pickWordForTheDay()
                     newGame = WordleGame(username, wod)
                     self.currGames[username] = newGame
                     with open(filename, 'w') as f:
                         pass
-                    introPrompt = "In a short single sentence, tell " + username + " that you are for them to send you five letter words for their Wordle game in the style of " + self.playStat.getPrompt(username)
-                    introMsg = ChatBot.giveResponse(introPrompt+ ".", "Ready for those 5 letter tho")
-                    print(introMsg)
-                    await message.author.send(introMsg)
+
+                    await message.author.send("Five-letter words please...")
                 else:
                     await message.author.send("You're currently not playing a game. Just send \"play\" to begin")
             else:
@@ -256,7 +256,7 @@ class DiscordGameBot:
                                     eogMsg = ""
                                     lines.append(submittedWord)
                                     guessesCommas = ", ".join(lines)
-                                    self.playStat.updateAfterGame(username, self.mainwindow.isWinner(), self.mainwindow.wordleGrid.getGuessCount())
+                                    self.playStat.updateAfterGame(username, self.currGames[username].isWinner, self.currGames[username].guessNumber)
                                     person = self.playStat.getPrompt(username)
                                     if(self.currGames[username].isWinner):
                                         guessCount = self.currGames[username].guessNumber
@@ -282,6 +282,8 @@ class DiscordGameBot:
                                             prompt += "Also wish them a Merry Christmas"
                                         elif self.Today == datetime(currYear, 1, 1).date():
                                             prompt += "Also wish them a Happy New Year"
+                                        elif self.Today == datetime(currYear, 2, 14).date():
+                                            prompt += "Also wish them a Happy Valentine Day"
                                     except:
                                         pass
                                     
