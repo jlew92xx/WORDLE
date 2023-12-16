@@ -6,11 +6,12 @@ class WordleGame():
 
 
 
-    def __init__(self, name, wod) -> None:
+    def __init__(self, name, wod, isFirstGame) -> None:
         self.guesses = []
         self.keyboard = {}
         self.isDone = False
         self.isWinner = False
+        self.isFirstGame = isFirstGame
         self.name = name
         self.wod = wod
         self.guessNumber = 0

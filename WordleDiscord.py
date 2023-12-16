@@ -55,6 +55,7 @@ class DiscordGameBot:
         self.solver = WordleSolver(self.mainwindow.wordleGrid)
         self.Today = None
         self.todaysPuzzleNumber = self.mainwindow.wordleGrid.getPuzzleNumber()
+        self.puzzleFinishers = {}
         # self.secondsToTomorrow = Ults.getTimeSleep(HOUR)
         # resetThread = threading.Thread(target=self.resetRoutine)
         # resetThread.daemon = True
@@ -182,7 +183,7 @@ class DiscordGameBot:
                 if userMessage == "play":
                     self.playStat.insertPlayer(username)
                     wod = self.mainwindow.wordleGrid.pickWordForTheDay()
-                    newGame = WordleGame(username, wod)
+                    newGame = WordleGame(username, wod, True)
                     self.currGames[username] = newGame
                     with open(filename, 'w') as f:
                         pass
@@ -199,7 +200,8 @@ class DiscordGameBot:
                 
                 if(notInCurrGames):
                     #create a replay and add it to the dictionary
-                    self.currGames[username] = WordleGame(username, wod)
+                    #TODO I need a way to determine if this is FirstPlayed game
+                    self.currGames[username] = WordleGame(username, wod, True)
                     self.currGames[username].replay(lines)
 
                 if (not self.currGames[username].isDone):
@@ -244,6 +246,7 @@ class DiscordGameBot:
 
                                     try:
                                         self.mainwindow.setName2(username)
+                                        self.puzzleFinishers[username] = message.author
                                         msg = self.currGames[username].createPuzzleResults(self.mainwindow.getPuzzleNumber())
                                         if(username != "jayloo92test"):
                                             await self.mainwindow.sendDiscordMessage(msg)
@@ -255,39 +258,45 @@ class DiscordGameBot:
 
                                     eogMsg = ""
                                     lines.append(submittedWord)
-                                    guessesCommas = ", ".join(lines)
+                                    
+                                    guessesCommas = ", ".join(lines).replace('\n', "")
                                     self.playStat.updateAfterGame(username, self.currGames[username].isWinner, self.currGames[username].guessNumber)
                                     person = self.playStat.getPrompt(username)
+                                    prompt = "In the style of " + person + ", respond to " + username + "'s Wordle game. "
                                     if(self.currGames[username].isWinner):
                                         guessCount = self.currGames[username].guessNumber
-                                        prompt = ""
+                                        
                                         
                                         if guessCount <= 3:
-                                            prompt = username +" won today's Wordle game with " + str(guessCount) +" guesses. In less than 1000 characters, Congratulate them in the style of " + person + ". The word of the day was "+ wod + ". Their guess were " + guessesCommas
+                                            prompt += username +" did an exceptionally good job on today's Wordle game with " + str(guessCount)
                                                 
                                         elif(guessCount > 3 and guessCount < 5):
-                                            prompt = username +" just did an average in today's Wordle with" + str(guessCount) +" guesses. In less than 1000 characters, Congratulate them in the style of " + person + ". The word of the day was "+ wod +". Their guess were " + guessesCommas
+                                            prompt += username +" just did average in today's Wordle with" + str(guessCount)
                                             
                                         else:
-                                            prompt = username +" barely won today's Wordle with " + str(guessCount) + "In less than 1000 characters,'Congratulate' them in the style of " + person + ". The word of the day is "+ wod +". Their guess were " + guessesCommas
-                                        
+                                            prompt += username +" barely won today's Wordle. One more wrong guess and they would of lost it because they had " + str(guessCount)
+                                        prompt += " guesses."
                                     else:
-                                        prompt = "In less than 1000 characters, Mercilessly mock "+username +" for losing today's wordle when the word of the day is " + wod +". Do it in the style of" + person + ""
-                                        
+                                        prompt = "Mercilessly mock " + username + " for losing today's wordle."
+                                    
+                                    prompt += "The word of the day was "+ wod +". Their guess were " + guessesCommas   
                                     currYear = self.Today.year
                                     try:
                                         if self.Today == datetime(currYear, 10, 31 ).date():
-                                            prompt += "Also wish them a happy Halloween"
+                                            prompt += " Also wish them a happy Halloween"
                                         elif self.Today == datetime(currYear, 12, 25).date():
-                                            prompt += "Also wish them a Merry Christmas"
+                                            prompt += " Also wish them a Merry Christmas"
                                         elif self.Today == datetime(currYear, 1, 1).date():
-                                            prompt += "Also wish them a Happy New Year"
+                                            prompt += " Also wish them a Happy New Year"
                                         elif self.Today == datetime(currYear, 2, 14).date():
-                                            prompt += "Also wish them a Happy Valentine Day"
+                                            prompt += " Also wish them a Happy Valentine Day"
                                     except:
                                         pass
-                                    
-                                    eogMsg = ChatBot.giveResponse(prompt+ ".", "games over")
+                                    prompt += " And work in an advertisment for Elizabeth Payne's Girl Scout cookies. Keep the response under a 1000 characters" 
+                                    if(username != "jayloo92test"):
+                                        eogMsg = ChatBot.giveResponse(prompt+ ".", "games over")
+                                    else:
+                                        eogMsg = prompt
                                     print(eogMsg)
                                     lenMsg = len(eogMsg)
                                     if(lenMsg < 2000):

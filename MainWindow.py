@@ -52,16 +52,16 @@ class MainWindow(QMainWindow):
         self.clipBoardButton = QPushButton("Copy Results to Clipboard")
         self.layout2.setSpacing(3)
         # refresh button
-        refreshIconClicked = QIcon("pumpkin.png")
-        refreshIconNormal = QIcon("pumpkin.png")
-        refreshIconInactive = QIcon("pumpkin.png")
+        refreshIconClicked = QIcon("SantaHat.png")
+        refreshIconNormal = QIcon("SantaHat.png")
+        refreshIconInactive = QIcon("SantaHat.png")
         self.refreshButton = myButton(
             refreshIconClicked, refreshIconNormal, refreshIconInactive)
         self.refreshButton.setEnabled(True)
 
-        finishIconClicked = QIcon("dry-leaves.png")
-        finishIconNormal = QIcon("dry-leaves.png")
-        finishIconInactive = QIcon("dry-leaves.png")
+        finishIconClicked = QIcon("christmasTree.png")
+        finishIconNormal = QIcon("christmasTree.png")
+        finishIconInactive = QIcon("christmasTree.png")
         self.finishButton = myButton(
             finishIconClicked, finishIconNormal, finishIconInactive)
         self.finishButton.setEnabled(True)
