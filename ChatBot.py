@@ -15,3 +15,9 @@ def giveResponse(prompt, error):
     except:
         print("AI failure!")
         return "AI FAILURE: " + error
+
+
+
+
+if __name__ == '__main__':
+    pass

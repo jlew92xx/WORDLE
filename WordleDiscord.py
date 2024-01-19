@@ -21,9 +21,33 @@ HOUR = 0
 FILEPREFIX = "TEMP"
 tokenFile = open("DiscordKey.txt", 'r')
 token = tokenFile.readlines()
-print(token)
+
 tokenFile.close()
 TOKEN = token[0]
+"""
+To calculate the date of Chinese New Year for a given year in the Gregorian calendar, we need to use the following algorithm:
+
+1. Determine the variable a by dividing the given year by 19 and taking the remainder.
+2. Determine the variable b by dividing the given year by 100 and taking the remainder.
+3. Determine the variable c by dividing the given year by 4 and taking the remainder.
+4. Determine the variable d by dividing the given year by 7 and taking the remainder.
+5. Calculate the variable e by adding up the values of a, 11b+4, 8c+13, and 12d+3, and then taking the remainder when divided by 30.
+6. If e equals 25 and a is greater than 11, or if e equals 24, then increment e by 1.
+7. Determine the variable g by subtracting e from the given year.
+8. Determine the variable h by calculating 30.6 multiplied by e plus 0.5 and then rounding down to the nearest whole number.
+9. If h is less than 19, the Chinese New Year falls in January of the given year; otherwise, it falls in February.
+10. Determine the day of the Chinese New Year by subtracting h from the total number of days in the month of the Chinese New Year, which is either 31 for January or 28 or 29 for February depending on whether it is a leap year or not.
+
+Now, we can define the function to determine if the give date is the chinese new year:
+"""
+def isChineseNewYear(year, p_month, p_day):
+    if p_month > 2 :
+        return False
+    if p_month == 1 and p_day < 21:
+        return False
+    if p_month == 2 and p_day > 20:
+        return False
+    
 
 
 def seconds_until_time(hours, minutes):
@@ -206,8 +230,6 @@ class DiscordGameBot:
                         submittedWord = userMessage.upper().rstrip()
                         if (self.mainwindow.isWord(submittedWord)):
 
-                            print(username + " " +
-                                  str(datetime.now().second) + "\n")
 
                             file = open(filename, 'a')
                             file.write(submittedWord.rstrip() + '\n')
@@ -246,10 +268,7 @@ class DiscordGameBot:
                                     self.puzzleFinishers[username] = message.author
                                     msg = self.currGames[username].createPuzzleResults(
                                         self.mainwindow.getPuzzleNumber())
-                                    if (username != "jayloo92test"):
-                                        await self.mainwindow.sendDiscordMessage(msg)
-                                    else:
-                                        print(msg)
+       
                                 except:
                                     pass
 
@@ -268,12 +287,12 @@ class DiscordGameBot:
 
                                     if guessCount <= 3:
                                         prompt += username + \
-                                            " did an exceptionally good job on today's Wordle game with " + \
+                                            " did an exceptionally good job winning today's Wordle game with " + \
                                             str(guessCount)
 
-                                    elif (guessCount > 3 and guessCount < 5):
+                                    elif (guessCount > 3 and guessCount <= 5):
                                         prompt += username + \
-                                            " just did average in today's Wordle with" + \
+                                            " just did an average job winning today's Wordle with " + \
                                             str(guessCount)
 
                                     else:
@@ -293,13 +312,16 @@ class DiscordGameBot:
                                     elif self.Today == datetime(currYear, 12, 25).date():
                                         prompt += " Also wish them a Merry Christmas"
                                     elif self.Today == datetime(currYear, 1, 1).date():
-                                        prompt += " Also wish them a Happy New Year"
+                                        prompt += " Also wish them a Happy New Year. The new year is " + str(currYear)
                                     elif self.Today == datetime(currYear, 2, 14).date():
                                         prompt += " Also wish them a Happy Valentine Day"
+                                    elif self.Today == datetime(currYear, 4, 1).date():
+                                        prompt += " Also try to RickRoll them with a disguised link for April fools"
                                 except:
                                     pass
-                                prompt += " Keep the response under a 1000 characters"
+                                prompt += ". Keep the response under a 1000 characters"
                                 if (username != "jayloo92test"):
+                                    await self.mainwindow.sendDiscordMessage(msg)
                                     eogMsg = ChatBot.giveResponse(
                                         prompt + ".", "games over")
                                 else:
@@ -345,6 +367,7 @@ class DiscordGameBot:
 
     async def postScores(self):
         channel = Bot.get_channel(1127398485369557092)
+        await channel.send("TESTING")
 
     def appendToCache(self, word, fileName):
         file = open(fileName, "a")
@@ -365,7 +388,8 @@ class DiscordGameBot:
     async def receiveMessage(self):
         pass
 
-
 if __name__ == '__main__':
+    
     app = QApplication(sys.argv)
     x = DiscordGameBot(app)
+    x.postScores()

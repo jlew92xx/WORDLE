@@ -16,7 +16,8 @@ import aiohttp
 # d = enchant.Dict("en_US")
 CACHE_PATH = "game.txt"
 PROFILE_PATH = "profile.txt"
-
+RIGHT_PIC_PATH = "snowman.png"
+LEFT_PIC_PATH = "winter.png"
 
 class MainWindow(QMainWindow):
     BACK_SPACE = 16777219
@@ -52,16 +53,16 @@ class MainWindow(QMainWindow):
         self.clipBoardButton = QPushButton("Copy Results to Clipboard")
         self.layout2.setSpacing(3)
         # refresh button
-        refreshIconClicked = QIcon("champaign.png")
-        refreshIconNormal = QIcon("champaign.png")
-        refreshIconInactive = QIcon("champaign.png")
+        refreshIconClicked = QIcon(RIGHT_PIC_PATH)
+        refreshIconNormal = QIcon(RIGHT_PIC_PATH)
+        refreshIconInactive = QIcon(RIGHT_PIC_PATH)
         self.refreshButton = myButton(
             refreshIconClicked, refreshIconNormal, refreshIconInactive)
         self.refreshButton.setEnabled(True)
 
-        finishIconClicked = QIcon("firework.png")
-        finishIconNormal = QIcon("firework.png")
-        finishIconInactive = QIcon("firework.png")
+        finishIconClicked = QIcon(LEFT_PIC_PATH)
+        finishIconNormal = QIcon(LEFT_PIC_PATH)
+        finishIconInactive = QIcon(LEFT_PIC_PATH)
         self.finishButton = myButton(
             finishIconClicked, finishIconNormal, finishIconInactive)
         self.finishButton.setEnabled(True)
@@ -199,7 +200,7 @@ class MainWindow(QMainWindow):
 
         self.finishButton.setIconSize(QSize(50, 50))
         self.finishButton.setFixedSize(QSize(50, 50))
-        self.finishButton.clicked.connect(self.showGameOverWindow)
+        
 
         buttonLayout.addWidget(
             self.finishButton, alignment=Qt.AlignmentFlag.AlignRight)
