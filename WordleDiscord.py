@@ -19,9 +19,29 @@ from WordleGame import WordleGame
 TESTACCOUNT = "jayloo92test"
 HOUR = 0
 FILEPREFIX = "TEMP"
-tokenFile = open("DiscordKey.txt", 'r')
-token = tokenFile.readlines()
+MAIN = "main"
+MAINDATABASE = 'playerStats.db'
+TESTDATABASE = 'testDatabase.db'
+"""
+returns turn or false if master or not:
+"""
+def isMain():
+    branch = ""
+    head_dir = Path(".") / ".git" / "HEAD"
+    with head_dir.open("r") as f: content = f.read().splitlines()
+    for line in content:
+        if line[0:4] == "ref:":
+            branch = line.partition("refs/heads/")[2]
+    return (branch == MAIN)
 
+ISMAIN = isMain()
+if ISMAIN:
+    tokenFile = open("DiscordKey.txt", 'r')
+else:
+    tokenFile = open("TestKey.txt" , "r")
+token = tokenFile.readlines()
+JLWORDLECHANNELID = 1127398485369557092
+TESTCHANNELID = 1133965604974506025
 tokenFile.close()
 TOKEN = token[0]
 """
@@ -70,7 +90,7 @@ class DiscordGameBot:
     currGames = {}
     mainwindow = None
     unlocked = True
-    playStat = WordleSQL()
+    
 
     def __init__(self, app) -> None:
         intents = discord.Intents.default()
@@ -80,7 +100,14 @@ class DiscordGameBot:
         app = QApplication(sys.argv)
 
         self.mainwindow = MainWindow()
-        self.solver = WordleSolver(self.mainwindow.wordleGrid)
+        self.WordleScoreChannel = None
+        if ISMAIN:
+            self.channelId = JLWORDLECHANNELID
+            self.playStat = WordleSQL(MAINDATABASE)
+            
+        else:
+            self.channelId = TESTCHANNELID
+            self.playStat = WordleSQL(TESTDATABASE)
         self.Today = None
         self.todaysPuzzleNumber = self.mainwindow.wordleGrid.getPuzzleNumber()
         self.puzzleFinishers = {}
@@ -112,8 +139,8 @@ class DiscordGameBot:
         @self.client.event
         async def on_ready():
             print(f'{self.client.user} is now running')
-
-            print(str(datetime.today()))
+            self.WordleScoreChannel = self.client.get_channel(self.channelId)
+            
             self.Today = datetime.today().date()
 
         @self.client.event
@@ -224,8 +251,8 @@ class DiscordGameBot:
                     # TODO I need a way to determine if this is FirstPlayed game
                     self.currGames[username] = WordleGame(username, wod, True)
                     self.currGames[username].replay(lines)
-
-                if (not self.currGames[username].isDone):
+                game = self.currGames[username]
+                if (not game.isDone):
                     if (len(userMessage) == 5):
                         submittedWord = userMessage.upper().rstrip()
                         if (self.mainwindow.isWord(submittedWord)):
@@ -235,14 +262,14 @@ class DiscordGameBot:
                             file.write(submittedWord.rstrip() + '\n')
                             file.close()
 
-                            self.currGames[username].eval(submittedWord)
+                            game.eval(submittedWord)
                             self.mainwindow.paintGame(
                                 self.currGames[username].guesses)
                             self.mainwindow.evalKeyboard(
                                 self.currGames[username].keyboard)
 
                             filenamePic = username + ".jpg"
-                            didLose = self.currGames[username].isDone and not self.currGames[username].isWinner
+                            didLose = game.isDone and not game.isWinner
                             if didLose:
                                 self.mainwindow.showTempMsg(wod, "red")
                             self.app.processEvents()
@@ -266,7 +293,7 @@ class DiscordGameBot:
                                 try:
                                     self.mainwindow.setName2(username)
                                     self.puzzleFinishers[username] = message.author
-                                    msg = self.currGames[username].createPuzzleResults(
+                                    eogScore = game.createPuzzleResults(
                                         self.mainwindow.getPuzzleNumber())
        
                                 except:
@@ -277,13 +304,12 @@ class DiscordGameBot:
 
                                 guessesCommas = ", ".join(
                                     lines).replace('\n', "")
-                                self.playStat.updateAfterGame(
-                                    username, self.currGames[username].isWinner, self.currGames[username].guessNumber)
+                                
                                 person = self.playStat.getPrompt(username)
                                 prompt = "In the style of " + person + \
                                     ", respond to " + username + "'s Wordle game. "
-                                if (self.currGames[username].isWinner):
-                                    guessCount = self.currGames[username].guessNumber
+                                if (game.isWinner):
+                                    guessCount = game.guessNumber
 
                                     if guessCount <= 3:
                                         prompt += username + \
@@ -320,10 +346,12 @@ class DiscordGameBot:
                                 except:
                                     pass
                                 prompt += ". Keep the response under a 1000 characters"
-                                if (username != "jayloo92test"):
-                                    await self.mainwindow.sendDiscordMessage(msg)
+                                if (username != TESTACCOUNT or (username == TESTACCOUNT and not ISMAIN)):
+                                    await self.postScores(username + "'s results:\n" + eogScore)
                                     eogMsg = ChatBot.giveResponse(
                                         prompt + ".", "games over")
+                                    self.playStat.updateAfterGame(
+                                        username, game.isWinner, game.guessNumber)
                                 else:
                                     eogMsg = prompt
                                 print(eogMsg)
@@ -365,9 +393,10 @@ class DiscordGameBot:
 
         self.client.run(TOKEN)
 
-    async def postScores(self):
-        channel = Bot.get_channel(1127398485369557092)
-        await channel.send("TESTING")
+    async def postScores(self, msg):
+        if self.WordleScoreChannel == None:
+            self.WordleScoreChannel = self.client.get_channel(self.channelId)
+        await self.WordleScoreChannel.send(msg)
 
     def appendToCache(self, word, fileName):
         file = open(fileName, "a")
@@ -392,4 +421,4 @@ if __name__ == '__main__':
     
     app = QApplication(sys.argv)
     x = DiscordGameBot(app)
-    x.postScores()
+    

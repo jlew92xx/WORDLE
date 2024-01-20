@@ -54,11 +54,13 @@ class WordleGame():
                 if c in tempWod:
                     output[i] = (input[i], Status.INWORD)
                     tempWod[tempWod.index(c)] = "@"
+                    #we do not want to override a green keyboard key
                     if (not c in self.keyboard.keys()):
                         self.keyboard[c] = Status.INWORD
                         
                 else:
-                    output[i] =(c, Status.INCORRECT)
+                    output[i] = (c, Status.INCORRECT)
+                    #we do not want to override a green or yellow keyboard key
                     if (not c in self.keyboard.keys()):
                         self.keyboard[c] = Status.INCORRECT
             i += 1

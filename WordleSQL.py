@@ -7,9 +7,9 @@ columnNames = ["Name", "NumberOfGuesses",
 
 class WordleSQL():
 
-    def __init__(self):
+    def __init__(self, databaseStr):
 
-        self.conn = sqlite3.connect('playerStats.db')
+        self.conn = sqlite3.connect(databaseStr)
         self.curs = self.conn.cursor()
         self.curs.execute("""CREATE TABLE IF NOT EXISTS playerStats (
             name text,
