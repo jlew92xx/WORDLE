@@ -19,7 +19,12 @@ class WordleSQL():
             Streak integer,
             wonToday text,
             prompt text,
+            hardmode integer,
+            currGame text,
+            doneWithFirst integer,
+            isPlaying integer,
             UNIQUE(name)
+            
             
             );""")
         self.conn.commit()
@@ -36,26 +41,48 @@ class WordleSQL():
         data = self.curs.fetchall()
         if len(data) == 0:
             characterName = ChatBot.giveResponse(
-                "A nonsensical hero name", "Batman")
-            params = (name, 0, 0, 0, 0, "False", characterName, 0)
+                "A nonsensical hero name", "A jerk Named Jonathan Lewis")
+            params = (name, 0, 0, 0, 0, "False", characterName, 0, "", 0, 0)
             self.curs.execute(
-                "INSERT OR IGNORE INTO playerStats VALUES(?,?,?,?,?,?,?,?)", params)
+                "INSERT OR IGNORE INTO playerStats VALUES(?,?,?,?,?,?,?,?,?,?,?)", params)
             self.conn.commit()
 
     def printTableToConsole(self):
         self.curs.execute("SELECT * FROM playerStats")
         print(self.curs.fetchall())
+        
+    def beginFirstGame(self, username):
+         self.curs.execute("""UPDATE
+                                playerStats 
+                                SET
+                                    isPlaying = 1,
+                                    doneWithFirst = 0
+                                WHERE 
+                                    name = ?""", (username, ))
+         self.conn.commit()
+         
+    def BeginOtherGame(self, username):
+        self.curs.execute("""UPDATE
+                                playerStats 
+                                SET
+                                    isPlaying = 1,
+                                    currGame = ""
+                                WHERE 
+                                    name = ?""", (username, ))
+        self.conn.commit() 
 
     def updateAfterGame(self, name, isWinner: bool, guesses: int):
         if (isWinner):
             self.curs.execute("""UPDATE
                                     playerStats 
                                     SET
-                                    Streak = Streak + 1,
-                                    wonToday = ?,
-                                    NumGamesPlayed = NumGamesPlayed + 1,
-                                    NumGamesWon = NumGamesWon + 1,
-                                    NumberOfGuesses = ? + NumberOfGuesses
+                                        Streak = Streak + 1,
+                                        wonToday = ?,
+                                        NumGamesPlayed = NumGamesPlayed + 1,
+                                        NumGamesWon = NumGamesWon + 1,
+                                        NumberOfGuesses = ? + NumberOfGuesses,
+                                        doneWithFirst = 1,
+                                        isPlaying = 0
                                     WHERE 
                                         name = ?""", ("True", guesses, name, ))
 
@@ -65,25 +92,66 @@ class WordleSQL():
                                     SET
                                         Streak = 0,
                                         NumGamesPlayed = NumGamesPlayed + 1,
-                                        NumberOfGuesses = ? + NumberOfGuesses
+                                        NumberOfGuesses = ? + NumberOfGuesses,
+                                        doneWithFirst = 1,
+                                        isPlaying = 0
                                     WHERE
                                         name = ?""", (guesses + 1, name,))
 
         self.conn.commit()
-
+    
+    def appendGuess(self, word, username):
+        guesses = self.getGuessesString(username) 
+        guesses += word + ","
+        self.curs.execute("""UPDATE
+                                    playerStats 
+                                    SET
+                                        currGame = ?
+                                    WHERE 
+                                        name = ?""", (guesses, username, ))
+        self.conn.commit()
+        
     def dailyReset(self):
         self.curs.execute("""
                           UPDATE playerStats
                             SET Streak = 0
                             WHERE
-                            wonToday = "False"
+                                wonToday = "False"
                           """)
         self.curs.execute("""
                           UPDATE playerStats
-                            SET wonToday = "False"
+                            SET
+                                wonToday = "False",
+                                currGame = "",
+                                doneWithFirst = 0,
+                                isPlaying = 0
+                            
                           """)
         self.conn.commit()
-
+        
+    def resetGame(self):
+        self.curs.execute("""
+                          UPDATE playerStats
+                            SET
+                                wonToday = "False",
+                                currGame = "",
+                                doneWithFirst = 0,
+                                isPlaying = 0
+                            
+                          """)
+        self.conn.commit()
+        
+    def differentDayReboot(self):
+        self.curs.execute("""
+                          UPDATE playerStats
+                            SET
+                                wonToday = "False",
+                                currGame = "",
+                                doneWithFirst = 0,
+                                isPlaying  = 0
+                          """)
+        self.conn.commit()
+        
     def getPrompt(self, userName):
         self.curs.execute("""select
                                 prompt
@@ -103,16 +171,18 @@ class WordleSQL():
                                         name = ?""", (inPrompt, userName,))
         self.conn.commit()
 
-    def addColumnWithDefaultValue(self, columnName, default):
-        # self.curs.execute("""ALTER TABLE playerStats
-        #                             ADD hardmode integer;
-        #                   """)
-        self.curs.execute("""UPDATE
-                                    playerStats
-                                    SET
-                                        hardmode = ?""", (default,))
+    def addColumnWithDefaultValue(self, columnName, type, default):
+        self.curs.execute("ALTER TABLE playerStats ADD COLUMN " + columnName + type)
+        self.curs.execute("""
+                          UPDATE playerStats
+                            SET ? = ?
+                          """, (columnName, default))
         self.conn.commit()
 
+    def removeCol(self, columnName):
+        self.curs.execute("ALTER TABLE playerStats DROP " + columnName)
+        self.conn.commit()
+        
     def setHardMode(self, on: int, username: str):
 
         self.curs.execute("""UPDATE
@@ -131,12 +201,47 @@ class WordleSQL():
                             WHERE
                                 name = ?""", (userName,))
         output = self.curs.fetchone()[0]
+        return  output == 1
+       
+        
+    def getIsPlaying(self, userName) -> bool:
+        self.curs.execute("""select
+                                isPlaying
+                            FROM
+                                playerStats
+                            WHERE
+                                name = ?""", (userName,))
+        output = self.curs.fetchone()[0]
         if output == 1:
             return True
         else:
             return False
-
+    #doneWithFirst
+    def getDoneWithFirst(self, userName) -> bool:
+        self.curs.execute("""select
+                                doneWithFirst
+                            FROM
+                                playerStats
+                            WHERE
+                                name = ?""", (userName,))
+        output = self.curs.fetchone()[0]
+        return output == 1
+            
+    
+    def getGuessesString(self, userName) -> str:
+        self.curs.execute("""select
+                                currGame
+                            FROM
+                                playerStats
+                            WHERE
+                                name = ?""", (userName,))
+        output = self.curs.fetchone()[0]
+        return output
+    def getGuessesList(self, userName)->list:
+        guessStr = self.getGuessesString(userName)
+        guessStr = guessStr[:-1]
+        return guessStr.split(",")
 
 if __name__ == '__main__':
-    wsql = WordleSQL()
-    wsql.setPrompt("ellily", "kawaii girl")
+    wsql = WordleSQL("playStats.db")
+    

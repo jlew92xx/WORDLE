@@ -10,14 +10,15 @@ from MainWindow import MainWindow
 import time
 import ChatBot
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from pathlib import Path
 from WordleSQL import WordleSQL
 from WordleSolver import WordleSolver
 from WordleGame import WordleGame
+from WordleDictionary import WordleDictionary
 # import schedule
 TESTACCOUNT = "jayloo92test"
-HOUR = 0
+EPOCH_DATE = date(2023, 6, 26)
 FILEPREFIX = "TEMP"
 MAIN = "main"
 MAINDATABASE = 'playerStats.db'
@@ -34,39 +35,50 @@ def isMain():
             branch = line.partition("refs/heads/")[2]
     return (branch == MAIN)
 
+
+
+def getPuzzleNumber():
+        delta = date.today() - EPOCH_DATE
+        return delta.days
+'''
+    Gets the puzzle storedin a file.
+    The reason it is store in a file is if the program 
+    shutdowns one day and reopens another it knows to run the reset process on the database.
+    Will fail if file is not in the repo.
+'''
+def getStoredPuzzleNumber()->int:
+    file = open(STOREPUZZLENUMBERFILE, 'r')
+    output = file.readlines()[0]
+    return (int(output))
+
+def setStoredPuzzleNumber(newNumber):
+    file = open(STOREPUZZLENUMBERFILE, 'w')
+    file.write(str(newNumber))
+
+
 ISMAIN = isMain()
+STOREPUZZLENUMBERFILE  = ""
+SALT = ""
+pictureDir = ""
 if ISMAIN:
     tokenFile = open("DiscordKey.txt", 'r')
+    STOREPUZZLENUMBERFILE = "MainNumber.txt"
+    SALT = "salt1"
+    pictureDir = "./MainPictures/"
+    
+    
 else:
     tokenFile = open("TestKey.txt" , "r")
+    STOREPUZZLENUMBERFILE = "TestNumber.txt"
+    SALT = "Jonathan"
+    pictureDir = "./TestPictures/" 
+    
 token = tokenFile.readlines()
 JLWORDLECHANNELID = 1127398485369557092
 TESTCHANNELID = 1133965604974506025
 tokenFile.close()
 TOKEN = token[0]
-"""
-To calculate the date of Chinese New Year for a given year in the Gregorian calendar, we need to use the following algorithm:
 
-1. Determine the variable a by dividing the given year by 19 and taking the remainder.
-2. Determine the variable b by dividing the given year by 100 and taking the remainder.
-3. Determine the variable c by dividing the given year by 4 and taking the remainder.
-4. Determine the variable d by dividing the given year by 7 and taking the remainder.
-5. Calculate the variable e by adding up the values of a, 11b+4, 8c+13, and 12d+3, and then taking the remainder when divided by 30.
-6. If e equals 25 and a is greater than 11, or if e equals 24, then increment e by 1.
-7. Determine the variable g by subtracting e from the given year.
-8. Determine the variable h by calculating 30.6 multiplied by e plus 0.5 and then rounding down to the nearest whole number.
-9. If h is less than 19, the Chinese New Year falls in January of the given year; otherwise, it falls in February.
-10. Determine the day of the Chinese New Year by subtracting h from the total number of days in the month of the Chinese New Year, which is either 31 for January or 28 or 29 for February depending on whether it is a leap year or not.
-
-Now, we can define the function to determine if the give date is the chinese new year:
-"""
-def isChineseNewYear(year, p_month, p_day):
-    if p_month > 2 :
-        return False
-    if p_month == 1 and p_day < 21:
-        return False
-    if p_month == 2 and p_day > 20:
-        return False
     
 
 
@@ -108,8 +120,17 @@ class DiscordGameBot:
         else:
             self.channelId = TESTCHANNELID
             self.playStat = WordleSQL(TESTDATABASE)
-        self.Today = None
-        self.todaysPuzzleNumber = self.mainwindow.wordleGrid.getPuzzleNumber()
+        self.Today = datetime.today().date()
+        
+        self.wordleDict = WordleDictionary(SALT)
+        self.wod = self.wordleDict.pickWordForTheDay(str(self.Today))
+        self.todaysPuzzleNumber = getStoredPuzzleNumber()
+        puzzNo = getPuzzleNumber()
+        if self.todaysPuzzleNumber != puzzNo:
+            self.playStat.differentDayReboot()
+            setStoredPuzzleNumber(puzzNo)
+            self.todaysPuzzleNumber = puzzNo
+            
         self.puzzleFinishers = {}
         # self.secondsToTomorrow = Ults.getTimeSleep(HOUR)
         # resetThread = threading.Thread(target=self.resetRoutine)
@@ -128,11 +149,6 @@ class DiscordGameBot:
 
         # self.secondsToTomorrow = 86400 # how many seconds there are in a day.
 
-    @tasks.loop(seconds=1)
-    async def dailyResetTask():
-        print("start sleeping....")
-        await asyncio.sleep(seconds_until_time(7, 11))
-        print("it works")
 
     def startDiscord(self):
 
@@ -145,18 +161,21 @@ class DiscordGameBot:
 
         @self.client.event
         async def on_member_join(member: discord.Member):
-            name = member.name
-            prompt = f"""Write a welcome message for {member.name} to my wordle discord server named Weer Wolerr. 
-            Tell them they can play your wordle by sending you the message \"play\". Tell they can also change your personality by sending you a message
-            with an exclamation point followed by person \"=\" and their desired personality.\
-            For example, if they want you to respond to their wordle score as a kawaii girl, they would send you \"!person = kawaii girl\" They can also post 
-            their New York Times Wordle in the nyt-wordle channel but you think that's an inferior wordle. Tell them to behave and be nice to the other wordlers.
-            """
+            if ISMAIN:
+                name = member.name
+                prompt = f"""Write a welcome message for {member.name} to my wordle discord server named Weer Wolerr. 
+                Tell them they can play your wordle by sending you the message \"play\". Tell they can also change your personality by sending you a message
+                with an exclamation point followed by person \"=\" and their desired personality.\
+                For example, if they want you to respond to their wordle score as a kawaii girl, they would send you \"!person = kawaii girl\" They can also post 
+                their New York Times Wordle in the nyt-wordle channel but you think that's an inferior wordle. Tell them to behave and be nice to the other wordlers.
+                """
 
-            msg = ChatBot.giveResponse(
-                prompt + ".", "Welcome to Weer Woler! Sorry My AI failed! But here's the prompt it was suppose use:\n " + prompt)
-            print(msg)
-            await member.send(msg)
+                msg = ChatBot.giveResponse(
+                    prompt + ".", "Welcome to Weer Woler! Sorry My AI failed! But here's the prompt it was suppose use:\n " + prompt)
+                print(msg)
+                await member.send(msg)
+            else:
+                msg = "Welcome to TestWordbot or whatever. It is an honor to be part of the elite few that have been given the honor.... OH whatever just try to break my code. You can reset your game by sending me !reset . Thank you for your service"
 
         @self.client.event
         async def on_message(message):
@@ -166,6 +185,7 @@ class DiscordGameBot:
                 return
             if message.author.bot:
                 if message.attachments:
+                    #TODO fix this 
                     userNameFile = Path(
                         message.attachments[0].filename).with_suffix('').name
                     try:
@@ -178,11 +198,13 @@ class DiscordGameBot:
 
             msgDate = message.created_at - timedelta(hours=6)
 
-            if (self.todaysPuzzleNumber != self.mainwindow.wordleGrid.getPuzzleNumber()):
-                self.mainwindow.wordleGrid.pickWordForTheDay()
+            if (self.todaysPuzzleNumber != getPuzzleNumber()):
+                
                 self.currGames = {}
                 self.Today = datetime.today().date()
-                self.todaysPuzzleNumber = self.mainwindow.wordleGrid.getPuzzleNumber()
+                self.wordleDict.pickWordForTheDay(str(self.Today))
+                self.todaysPuzzleNumber = getPuzzleNumber()
+                setStoredPuzzleNumber(self.todaysPuzzleNumber)
                 self.playStat.dailyReset()
                 self.resetRoutine()
                 print("reset routines ran at message date: " + str(msgDate))
@@ -192,11 +214,13 @@ class DiscordGameBot:
             channel = str(message.channel)
             print(f"{username} said '{userMessage}' {(channel)}")
             self.playStat.insertPlayer(username)
+            notInCurrGames = not username in self.currGames.keys()
             if (userMessage.startswith('!')):
                 userMessage = userMessage.replace("!", "")
                 command = userMessage.split("=")
+                commandWord = command[0].lower().strip()
                 if (len(command) == 2):
-                    commandWord = command[0].lower().strip()
+                    
                     paramWord = command[1].strip()
 
                     if commandWord == "person":
@@ -214,66 +238,67 @@ class DiscordGameBot:
                             self.playStat.setHardMode(0, username)
                         else:
                             await message.author.send("Invalid option: say \"on\" or \"off\"")
-
+                    
+                        
                     else:
                         await message.author.send("Invalid Command.")
+                elif(len(command) == 1):
+                    if not ISMAIN and commandWord == "reset":
+                        self.playStat.resetGame()
+                        if not notInCurrGames:
+                            self.currGames.pop(username)
+                    
                 else:
                     await message.author.send("Invalid Command.")
 
                 return
             userMessage = userMessage.lower()
 
-            filename = self.mainwindow.createFileName(username)
+        
 
-            fileNotCreated = not os.path.isfile(filename)
-            notInCurrGames = not username in self.currGames.keys()
-            wod = self.mainwindow.wordleGrid.wordOfTheDay
-            if (fileNotCreated):
+            notPlaying = not self.playStat.getIsPlaying(username)
+            hasPlayedFirst = self.playStat.getDoneWithFirst(username)
+           
+            if (notPlaying):
                 if userMessage == "play":
                     self.playStat.insertPlayer(username)
-                    wod = self.mainwindow.wordleGrid.pickWordForTheDay()
-                    newGame = WordleGame(username, wod, True)
+                    
+                    newGame = WordleGame(username, self.wod, True)
                     self.currGames[username] = newGame
-                    with open(filename, 'w') as f:
-                        pass
+                    self.playStat.beginFirstGame(username)
 
                     await message.author.send("Five-letter words please...")
                 else:
                     await message.author.send("You're currently not playing a game. Just send \"play\" to begin")
             else:
 
-                file = open(filename, 'r')
-                lines = file.readlines()
-                file.close()
+                lines = self.playStat.getGuessesList(username)
 
                 if (notInCurrGames):
                     # create a replay and add it to the dictionary
-                    # TODO I need a way to determine if this is FirstPlayed game
-                    self.currGames[username] = WordleGame(username, wod, True)
+                    self.currGames[username] = WordleGame(username, self.wod, True)
                     self.currGames[username].replay(lines)
                 game = self.currGames[username]
                 if (not game.isDone):
                     if (len(userMessage) == 5):
                         submittedWord = userMessage.upper().rstrip()
-                        if (self.mainwindow.isWord(submittedWord)):
+                        if (self.wordleDict.isWord(submittedWord)):
 
 
-                            file = open(filename, 'a')
-                            file.write(submittedWord.rstrip() + '\n')
-                            file.close()
+                            self.playStat.appendGuess(submittedWord, username)
 
                             game.eval(submittedWord)
                             self.mainwindow.paintGame(
-                                self.currGames[username].guesses)
+                                game.guesses)
                             self.mainwindow.evalKeyboard(
-                                self.currGames[username].keyboard)
+                                game.keyboard)
 
-                            filenamePic = username + ".jpg"
+                            filenamePic = pictureDir + username + ".jpg"
                             didLose = game.isDone and not game.isWinner
                             if didLose:
-                                self.mainwindow.showTempMsg(wod, "red")
+                                self.mainwindow.showTempMsg(self.wod, "red")
                             self.app.processEvents()
-                            self.captureScreenShot(filenamePic)
+                            self.captureScreenShot( filenamePic)
                             if didLose:
                                 self.mainwindow.hideTempMsg()
                             self.mainwindow.reset()
@@ -288,7 +313,7 @@ class DiscordGameBot:
                                 time.sleep(.1)
                                 print("failed to send.")
 
-                            if (self.currGames[username].isDone):
+                            if (game.isDone):
 
                                 try:
                                     self.mainwindow.setName2(username)
@@ -300,10 +325,17 @@ class DiscordGameBot:
                                     pass
 
                                 eogMsg = ""
-                                lines.append(submittedWord)
+                                guessesCommas = ""
+                                if game.guessNumber > 2:
+                                    lines.append(" and " + submittedWord)
 
-                                guessesCommas = ", ".join(
-                                    lines).replace('\n', "")
+                                    guessesCommas = ", ".join(
+                                        lines).replace('\n', "")
+                                elif game.guessNumber == 2:
+                                    guessesCommas = lines[0] + " and " + submittedWord
+                                    
+                                else:
+                                    guessesCommas = submittedWord
                                 
                                 person = self.playStat.getPrompt(username)
                                 prompt = "In the style of " + person + \
@@ -329,8 +361,8 @@ class DiscordGameBot:
                                 else:
                                     prompt = "Mercilessly mock " + username + " for losing today's wordle."
 
-                                prompt += "The word of the day was " + wod + \
-                                    ". Their guess were " + guessesCommas
+                                prompt += "The word of the day was " + self.wod + \
+                                    ". Their guess(es) were " + guessesCommas
                                 currYear = self.Today.year
                                 try:
                                     if self.Today == datetime(currYear, 10, 31).date():
@@ -342,16 +374,17 @@ class DiscordGameBot:
                                     elif self.Today == datetime(currYear, 2, 14).date():
                                         prompt += " Also wish them a Happy Valentine Day"
                                     elif self.Today == datetime(currYear, 4, 1).date():
-                                        prompt += " Also try to RickRoll them with a disguised link for April fools"
+                                        prompt += " Also try to RickRoll them with a disguised link for April fools day"
                                 except:
                                     pass
                                 prompt += ". Keep the response under a 1000 characters"
-                                if (username != TESTACCOUNT or (username == TESTACCOUNT and not ISMAIN)):
-                                    await self.postScores(username + "'s results:\n" + eogScore)
+                                await self.postScores(username + "'s results:\n" + eogScore)
+                                self.playStat.updateAfterGame(
+                                        username, game.isWinner, game.guessNumber)
+                                if (ISMAIN):
                                     eogMsg = ChatBot.giveResponse(
                                         prompt + ".", "games over")
-                                    self.playStat.updateAfterGame(
-                                        username, game.isWinner, game.guessNumber)
+
                                 else:
                                     eogMsg = prompt
                                 print(eogMsg)
@@ -381,12 +414,12 @@ class DiscordGameBot:
                             msgWrong = "Not in the word database!"
                             await message.author.send(msgWrong)
                             if (self.currGames[username].guessNumber > 0):
-                                await message.author.send("", file=discord.File(username + ".jpg"))
+                                await message.author.send("", file=discord.File(pictureDir + username + ".jpg"))
 
                     else:
                         await message.author.send("You're currently playing a game. Please try sending a 5-letter word")
                         if (self.currGames[username].guessNumber > 0):
-                            await message.author.send("", file=discord.File(username + ".jpg"))
+                            await message.author.send("", file=discord.File(pictureDir + username + ".jpg"))
 
                 else:
                     await message.author.send("You're done! Leave me alone!")

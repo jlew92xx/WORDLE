@@ -96,16 +96,3 @@ class WordleGame():
     
 if __name__ == '__main__':
      game = WordleGame("jayloo92", "EERIE")
-     dicty = {}
-     dicty ["fuck"] = game
-     print(dicty)
-    #  app = QApplication(sys.argv)
-    #  game.eval("ARIEL")
-    #  game.eval("SMART")
-    #  game.eval("EEVER")
-    #  main = MainWindow()
-    #  main.paintGame(game.guesses)
-    #  main.evalKeyboard(game.keyboard)
-    #  print(game.wod)
-    #  print(str(game.guesses))
-    #  sys.exit(app.exec())
