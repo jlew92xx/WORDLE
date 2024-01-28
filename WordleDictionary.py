@@ -13,7 +13,7 @@ class WordleDictionary():
         self.buildWordBankDict()
         
     
-    def pickWordForTheDay(self, date:str):
+    def pickWordForTheDay(self, date:str)->str:
         numFiveLetterWords = len(self.wodCandidates)
         s = date + self.salt
         number = int(hashlib.sha256(s.encode('utf-8')).hexdigest(), 16)
