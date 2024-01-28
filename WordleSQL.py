@@ -172,11 +172,8 @@ class WordleSQL():
         self.conn.commit()
 
     def addColumnWithDefaultValue(self, columnName, type, default):
-        self.curs.execute("ALTER TABLE playerStats ADD COLUMN " + columnName + type)
-        self.curs.execute("""
-                          UPDATE playerStats
-                            SET ? = ?
-                          """, (columnName, default))
+        self.curs.execute("ALTER TABLE playerStats ADD COLUMN " + columnName + " " + type)
+
         self.conn.commit()
 
     def removeCol(self, columnName):
@@ -244,7 +241,7 @@ class WordleSQL():
 
 if __name__ == '__main__':
     wsql = WordleSQL("playerStats.db")
-    #wsql.addColumnWithDefaultValue("currGame", "text", "\"\"")
-    #wsql.addColumnWithDefaultValue("doneWithFirst","integer","0")
-    #wsql.addColumnWithDefaultValue("isPlaying","integer","0")
-    wsql.removeCol("currGametext")
+
+    wsql.addColumnWithDefaultValue("doneWithFirst","integer","0")
+    wsql.addColumnWithDefaultValue("isPlaying","integer","0")
+    
