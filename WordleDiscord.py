@@ -260,6 +260,10 @@ class DiscordGameBot:
             hasPlayedFirst = self.playStat.getDoneWithFirst(username)
            
             if (notPlaying):
+                
+                if(hasPlayedFirst):
+                    await message.author.send("You're done. Leave me alone")
+                    return
                 if userMessage == "play":
                     self.playStat.insertPlayer(username)
                     
@@ -420,9 +424,7 @@ class DiscordGameBot:
                         await message.author.send("You're currently playing a game. Please try sending a 5-letter word")
                         if (self.currGames[username].guessNumber > 0):
                             await message.author.send("", file=discord.File(pictureDir + username + ".jpg"))
-
-                else:
-                    await message.author.send("You're done! Leave me alone!")
+                            
 
         self.client.run(TOKEN)
 

@@ -180,7 +180,7 @@ class WordleSQL():
         self.conn.commit()
 
     def removeCol(self, columnName):
-        self.curs.execute("ALTER TABLE playerStats DROP " + columnName)
+        self.curs.execute("ALTER TABLE playerStats DROP COLUMN " + columnName + ";")
         self.conn.commit()
         
     def setHardMode(self, on: int, username: str):
@@ -243,5 +243,8 @@ class WordleSQL():
         return guessStr.split(",")
 
 if __name__ == '__main__':
-    wsql = WordleSQL("playStats.db")
-    
+    wsql = WordleSQL("playerStats.db")
+    #wsql.addColumnWithDefaultValue("currGame", "text", "\"\"")
+    #wsql.addColumnWithDefaultValue("doneWithFirst","integer","0")
+    #wsql.addColumnWithDefaultValue("isPlaying","integer","0")
+    wsql.removeCol("currGametext")
