@@ -19,6 +19,8 @@ class WordleGame():
     def replay(self, words:list):
         for word in words:
             word = word.strip()
+            if word == "":
+                return
             self.eval(word)
             
     def eval(self, input):
