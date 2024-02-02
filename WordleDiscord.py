@@ -382,6 +382,7 @@ class DiscordGameBot:
                                 except:
                                     pass
                                 prompt += ". Keep the response under a 1000 characters"
+                                eogScore = game.createPuzzleResults(self.todaysPuzzleNumber)
                                 await self.postScores(username + "'s results:\n" + eogScore)
                                 self.playStat.updateAfterGame(
                                         username, game.isWinner, game.guessNumber)

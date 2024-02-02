@@ -1,7 +1,5 @@
 from enums import Status
-from MainWindow import MainWindow
-from PyQt5.QtWidgets import QApplication
-import sys
+import WordleConfigure
 class WordleGame():
 
 
@@ -24,10 +22,10 @@ class WordleGame():
             self.eval(word)
             
     def eval(self, input):
-        #at this point we know that the word is a five letter actual word.
+        #at this point we know that the word is a correct-lettered actual word.
         self.guessNumber += 1
         output = []
-        for i in range(0,5):
+        for i in range(0,len(input)):
             output.append(0)
         
         i = 0
@@ -42,7 +40,7 @@ class WordleGame():
                 correctCount += 1
             i += 1
         
-        if(correctCount == 5):
+        if(correctCount == WordleConfigure.WORDSIZE):
             self.isDone = True
             self.isWinner = True
             self.guesses.append(output) 
@@ -66,7 +64,7 @@ class WordleGame():
                     if (not c in self.keyboard.keys()):
                         self.keyboard[c] = Status.INCORRECT
             i += 1
-        if(self.guessNumber == 6):
+        if(self.guessNumber == WordleConfigure.NUMOFGUESS):
             self.isDone = True
         self.guesses.append(output)    
     
@@ -75,7 +73,7 @@ class WordleGame():
             s = str(self.guessNumber)
         else:
             s = "⛈️"
-        output = "JL's Wordle " + str(puzzleNumber) + " " + s + "/6" + 2 * "\n"
+        output = "JL's Wordle " + str(puzzleNumber) + " " + s + "/" + str(WordleConfigure.NUMOFGUESS) + 2 * "\n"
         for guess in self.guesses:
                 
             for X in guess:
