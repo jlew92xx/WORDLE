@@ -96,16 +96,6 @@ TOKEN = token[0]
     
 
 
-def seconds_until_time(hours, minutes):
-    now = datetime.now()
-    det = 0
-    target = ((now + timedelta(days=det)).replace(hour=hours,
-              minute=minutes, second=0))
-    diff = (target - now).total_seconds()
-    if diff < 0:
-        diff += 3600
-    return diff
-
 
 guildId = 1127338015249944596
 todaysWordlers = 'todays-wordlers'
@@ -214,6 +204,7 @@ class DiscordGameBot:
                 
                 self.currGames = {}
                 self.Today = datetime.today().date()
+                self.mainwindow.setIcons(MONTHICONS[self.Today.month - 1][0], MONTHICONS[self.Today.month - 1][1])
                 self.wod = self.wordleDict.pickWordForTheDay(str(self.Today))
                 self.todaysPuzzleNumber = newPuzzNum
                 setStoredPuzzleNumber(newPuzzNum)
