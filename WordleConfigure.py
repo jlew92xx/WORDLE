@@ -12,7 +12,7 @@ def isMain():
         if line[0:4] == "ref:":
             branch = line.partition("refs/heads/")[2]
     return (branch == MAIN)
-WORDSIZE = 6
+WORDSIZE = 5
 NUMOFGUESS = 6
 ISMAIN = isMain()
 STOREPUZZLENUMBERFILE = ""

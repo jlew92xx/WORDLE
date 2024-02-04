@@ -23,8 +23,22 @@ FILEPREFIX = "TEMP"
 MAIN = "main"
 MAINDATABASE = 'playerStats.db'
 TESTDATABASE = 'testDatabase.db'
+
+MONTHICONS =[("./ICONS/snowman.png","./ICONS/winter.png"), #Jan
+        ("./ICONS/chineseDragon.png","./ICONS/chinese-new-year.png"), #Feb
+        ("./ICONS/march_clover.png","./ICONS/march_rainbow.png"), #Mar
+        ("./ICONS/april_sun-shower.png","./ICONS/flowers.png"), #Apr
+        ("./ICONS/beach-ball.png","./ICONS/tulips.png"), #May
+        ("./ICONS/sun.png","./ICONS/beach.png"), #Jun
+        ("./ICONS/america.png","./ICONS/statue-of-liberty.png"), #Jul
+        ("./ICONS/hot.png","./ICONS/icecream-cone.png"), #Aug
+        ("./ICONS/rugby-ball.png","./ICONS/september.png"), #Sep
+        ("./ICONS/pumpkin.png","./ICONS/dry-leaves.png"), #Oct
+        ("./ICONS/cornucopia.png","./ICONS/turkey.png"), #Nov
+        ("./ICONS/christmasTree.png","./ICONS/holly.png")] #Dec
+
 """
-returns turn or false if master or not:
+returns turn or false if main or not:
 """
 def isMain():
     branch = ""
@@ -121,6 +135,7 @@ class DiscordGameBot:
             self.channelId = TESTCHANNELID
             self.playStat = WordleSQL(TESTDATABASE)
         self.Today = datetime.today().date()
+        self.mainwindow.setIcons(MONTHICONS[self.Today.month - 1][0], MONTHICONS[self.Today.month - 1][1])
         
         self.wordleDict = WordleDictionary(SALT)
         self.wod = self.wordleDict.pickWordForTheDay(str(self.Today))
@@ -141,11 +156,7 @@ class DiscordGameBot:
         app.processEvents()
         self.startDiscord()
 
-    def resetRoutine(self):
 
-        for filename in glob.glob("./" + FILEPREFIX + "*"):
-            os.remove(filename)
-        self.lastPictureMsg = {}
 
         # self.secondsToTomorrow = 86400 # how many seconds there are in a day.
 
@@ -198,15 +209,15 @@ class DiscordGameBot:
 
             msgDate = message.created_at - timedelta(hours=6)
 
-            if (self.todaysPuzzleNumber != getPuzzleNumber()):
+            newPuzzNum = getPuzzleNumber()
+            if (self.todaysPuzzleNumber != newPuzzNum):
                 
                 self.currGames = {}
                 self.Today = datetime.today().date()
                 self.wod = self.wordleDict.pickWordForTheDay(str(self.Today))
-                self.todaysPuzzleNumber = getPuzzleNumber()
-                setStoredPuzzleNumber(self.todaysPuzzleNumber)
+                self.todaysPuzzleNumber = newPuzzNum
+                setStoredPuzzleNumber(newPuzzNum)
                 self.playStat.dailyReset()
-                self.resetRoutine()
                 print("reset routines ran at message date: " + str(msgDate))
 
             username = str(message.author)
@@ -319,15 +330,6 @@ class DiscordGameBot:
 
                             if (game.isDone):
 
-                                try:
-                                    self.mainwindow.setName2(username)
-                                    self.puzzleFinishers[username] = message.author
-                                    eogScore = game.createPuzzleResults(
-                                        self.mainwindow.getPuzzleNumber())
-       
-                                except:
-                                    pass
-
                                 eogMsg = ""
                                 guessesCommas = ""
                                 if game.guessNumber > 2:
@@ -362,6 +364,7 @@ class DiscordGameBot:
                                             " barely won today's Wordle. One more wrong guess and they would of lost it because they had " + \
                                             str(guessCount)
                                     prompt += " guesses."
+                                
                                 else:
                                     prompt = "Mercilessly mock " + username + " for losing today's wordle."
 

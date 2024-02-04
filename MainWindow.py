@@ -53,19 +53,7 @@ class MainWindow(QMainWindow):
         self.clipBoardButton = QPushButton("Copy Results to Clipboard")
         self.layout2.setSpacing(3)
         # refresh button
-        refreshIconClicked = QIcon(RIGHT_PIC_PATH)
-        refreshIconNormal = QIcon(RIGHT_PIC_PATH)
-        refreshIconInactive = QIcon(RIGHT_PIC_PATH)
-        self.refreshButton = myButton(
-            refreshIconClicked, refreshIconNormal, refreshIconInactive)
-        self.refreshButton.setEnabled(True)
 
-        finishIconClicked = QIcon(LEFT_PIC_PATH)
-        finishIconNormal = QIcon(LEFT_PIC_PATH)
-        finishIconInactive = QIcon(LEFT_PIC_PATH)
-        self.finishButton = myButton(
-            finishIconClicked, finishIconNormal, finishIconInactive)
-        self.finishButton.setEnabled(True)
 
         self.toolBar = self.createToolbar()
         self.layout2.addWidget(self.toolBar)
@@ -134,6 +122,14 @@ class MainWindow(QMainWindow):
     def setName2(self, name):
         self.name = name
 
+    def setIcons(self, left, right):
+        rightIcon = QIcon(right)
+        self.rightButton.setIcon(rightIcon)
+
+        leftIcon = QIcon(left)
+        self.leftButton.setIcon(leftIcon)
+        
+    
     def setName(self):
         self.name = self.nameLineEdit.text()
         file = open(PROFILE_PATH, 'w')
@@ -164,10 +160,6 @@ class MainWindow(QMainWindow):
         self.wordleGrid.isWinner = (len(dict["correct"]) == 5)
         self.wordleGrid.nextGuess()
 
-        self.wordleGrid.isDone = self.isWinner() or self.wordleGrid.getGuessCount() == 6
-        if (self.wordleGrid.isDone):
-            self.clipBoardButton.setEnabled(True)
-            self.finishButton.setEnabled(True)
 
     def evalKeyboard(self, keyboardDict: dict):
         self.keyboard.evalKeyboard(keyboardDict)
@@ -193,23 +185,25 @@ class MainWindow(QMainWindow):
         wordleButton.setFont(QFont('boulder', 32))
         wordleButton.setFixedSize(QSize(200, 75))
         wordleButton.clicked.connect(self.centerText)
-
-        self.refreshButton.setIconSize(QSize(50, 50))
-        self.refreshButton.setFixedSize(QSize(50, 50))
-        self.refreshButton.clicked.connect(self.refresh)
-
-        self.finishButton.setIconSize(QSize(50, 50))
-        self.finishButton.setFixedSize(QSize(50, 50))
         
+        self.leftButton = QPushButton()
+        self.leftButton.setIconSize(QSize(50, 50))
+        self.leftButton.setFixedSize(QSize(50, 50))
+        self.leftButton.setStyleSheet("background-color: black")
+        
+        self.rightButton = QPushButton()
+        self.rightButton.setIconSize(QSize(50, 50))
+        self.rightButton.setFixedSize(QSize(50, 50))
+        self.rightButton.setStyleSheet("background-color: black")
 
         buttonLayout.addWidget(
-            self.finishButton, alignment=Qt.AlignmentFlag.AlignRight)
+            self.rightButton, alignment=Qt.AlignmentFlag.AlignRight)
         buttonLayout.addWidget(
-            self.refreshButton, alignment=Qt.AlignmentFlag.AlignRight)
+            self.leftButton, alignment=Qt.AlignmentFlag.AlignRight)
 
         buttonWidget.setLayout(buttonLayout)
 
-        self.refreshButton.setStyleSheet("border: 0px;")
+        self.leftButton.setStyleSheet("border: 0px;")
         layout.setSpacing(0)
         layout.addWidget(wordleButton, alignment=Qt.AlignmentFlag.AlignHCenter)
         wordleButton.setStyleSheet("border: 0px;"
@@ -225,18 +219,7 @@ class MainWindow(QMainWindow):
     def centerText(self):
         pass
 
-    def checkNewDay(self):
-        while (True):
 
-            if self.wordleGrid.isDifferentDay():
-                self.refreshButton.setEnabled(True)
-
-            time.sleep(10)
-
-    def refresh(self):
-
-        self.reset()
-        self.refreshButton.setEnabled(False)
 
     def paintGame(self, guesses: list):
         self.wordleGrid.paintGrid(guesses)
@@ -249,7 +232,7 @@ class MainWindow(QMainWindow):
         # self.wordleGrid.pickWordForTheDay()
         self.keyboard.reset()
         self.clipBoardButton.setEnabled(False)
-        self.finishButton.setEnabled(True)
+        self.rightButton.setEnabled(True)
         self.gameOverWindow = None
 
     def appendToCache(self, word):
@@ -286,12 +269,6 @@ class MainWindow(QMainWindow):
     def getPuzzleNumber(self):
         return str(self.wordleGrid.getPuzzleNumber())
 
-    async def sendDiscordMessage(self, msg):
-        async with aiohttp.ClientSession() as session:
-
-            webHook = Webhook.from_url(
-                "https://discord.com/api/webhooks/1127398517942517791/VVTL1nHMkN4virf0BTX3QrOWb3OXLJvZyLCjmXZ6ltt_Nbcdfg-5ld1iubGhEHsoPyoB", session=session)
-            await webHook.send(self.name+"'s results:\n"+msg)
 
     def isDone(self):
         return self.wordleGrid.isDone
@@ -311,33 +288,3 @@ class MainWindow(QMainWindow):
     def isHardmodeCompliant(self, input):
         return self.wordleGrid.isHardModeComplient(input)
 
-
-class myButton(QPushButton):
-    def __init__(self, clicked: QIcon, normal: QIcon, inactive: QIcon):
-        super().__init__()
-        self.clickedIcon = clicked
-        self.normalIcon = normal
-        self.inactiveIcon = inactive
-        self.setIcon(normal)
-        palette = QPalette()
-        role = self.backgroundRole()
-        palette.setColor(role, QColor('black'))
-        self.setPalette(palette)
-        self.setAutoFillBackground(True)
-
-    def mousePressEvent(self, e: QMouseEvent) -> None:
-
-        self.setIcon(self.clickedIcon)
-        return super().mousePressEvent(e)
-
-    def mouseReleaseEvent(self, e: QMouseEvent) -> None:
-        self.setIcon(self.normalIcon)
-        return super().mouseReleaseEvent(e)
-
-    def setEnabled(self, a0: bool) -> None:
-        # if (a0):
-        #     self.setIcon(self.normalIcon)
-        # else:
-        #     self.setIcon(self.inactiveIcon)
-
-        return super().setEnabled(a0)
