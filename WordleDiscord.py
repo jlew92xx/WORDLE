@@ -16,6 +16,9 @@ from WordleSQL import WordleSQL
 from WordleSolver import WordleSolver
 from WordleGame import WordleGame
 from WordleDictionary import WordleDictionary
+import holidays
+from dateutil.easter import *
+from lunardate import LunarDate
 # import schedule
 TESTACCOUNT = "jayloo92test"
 EPOCH_DATE = date(2023, 6, 26)
@@ -25,7 +28,7 @@ MAINDATABASE = 'playerStats.db'
 TESTDATABASE = 'testDatabase.db'
 
 MONTHICONS =[("./ICONS/snowman.png","./ICONS/winter.png"), #Jan
-        ("./ICONS/chineseDragon.png","./ICONS/chinese-new-year.png"), #Feb
+        ("./ICONS/lincoln.png","./ICONS/martin-luther-king.png"), #Feb
         ("./ICONS/march_clover.png","./ICONS/march_rainbow.png"), #Mar
         ("./ICONS/april_sun-shower.png","./ICONS/flowers.png"), #Apr
         ("./ICONS/beach-ball.png","./ICONS/tulips.png"), #May
@@ -36,10 +39,33 @@ MONTHICONS =[("./ICONS/snowman.png","./ICONS/winter.png"), #Jan
         ("./ICONS/pumpkin.png","./ICONS/dry-leaves.png"), #Oct
         ("./ICONS/cornucopia.png","./ICONS/turkey.png"), #Nov
         ("./ICONS/christmasTree.png","./ICONS/holly.png")] #Dec
-
+HOLIDAYICONS = {
+    "1/1":("./ICONS/firework.png","./ICONS/champaign.png"),
+    "2/14":("./ICONS/cupid.png", "./ICONS/love.png"),
+    "10/31":("./ICONS/jacko.png", "./ICONS/ghost.png"),
+    "11/11":("./ICONS/veteran.png-", "./ICONS/soldier.png"),
+    "12/31":("./ICONS/firework.png","./ICONS/champaign.png"),
+    "CNY": ("./ICONS/chineseDragon.png","./ICONS/chinese-new-year.png"),
+    "EASTER": ("./ICONS/easter-egg.png", "./ICONS/rabbit.png")
+}
 """
 returns turn or false if main or not:
 """
+def isChineseNewYear(d:date)->bool:
+    return d == LunarDate(d.year, 1,1).toSolarDate()
+
+def isEaster(i:date)->bool:
+    d = easter(i.year)
+    
+    return d == i
+    
+
+def convertMonthDayStr(date:date):
+    output = str(date.month) + "/" + str(date.day)
+    return output
+
+
+
 def isMain():
     branch = ""
     head_dir = Path(".") / ".git" / "HEAD"
@@ -125,7 +151,8 @@ class DiscordGameBot:
             self.channelId = TESTCHANNELID
             self.playStat = WordleSQL(TESTDATABASE)
         self.Today = datetime.today().date()
-        self.mainwindow.setIcons(MONTHICONS[self.Today.month - 1][0], MONTHICONS[self.Today.month - 1][1])
+       
+        self.setIcons()
         
         self.wordleDict = WordleDictionary(SALT)
         self.wod = self.wordleDict.pickWordForTheDay(str(self.Today))
@@ -150,6 +177,20 @@ class DiscordGameBot:
 
         # self.secondsToTomorrow = 86400 # how many seconds there are in a day.
 
+    def setIcons(self):
+        keyDay = convertMonthDayStr(self.Today)
+        tup = None
+        if(keyDay in HOLIDAYICONS.keys()):
+            tup = HOLIDAYICONS[keyDay]
+            
+        elif(isChineseNewYear(self.Today)):
+            tup = HOLIDAYICONS["CNY"]
+        elif(isEaster(self.Today)):
+            tup = HOLIDAYICONS["EASTER"]
+        else:
+            tup = MONTHICONS[self.Today.month - 1]
+            
+        self.mainwindow.setIcons(tup[0], tup[1])   
 
     def startDiscord(self):
 
@@ -204,7 +245,7 @@ class DiscordGameBot:
                 
                 self.currGames = {}
                 self.Today = datetime.today().date()
-                self.mainwindow.setIcons(MONTHICONS[self.Today.month - 1][0], MONTHICONS[self.Today.month - 1][1])
+                
                 self.wod = self.wordleDict.pickWordForTheDay(str(self.Today))
                 self.todaysPuzzleNumber = newPuzzNum
                 setStoredPuzzleNumber(newPuzzNum)
@@ -362,6 +403,7 @@ class DiscordGameBot:
                                 prompt += "The word of the day was " + self.wod + \
                                     ". Their guess(es) were " + guessesCommas
                                 currYear = self.Today.year
+
                                 try:
                                     if self.Today == datetime(currYear, 10, 31).date():
                                         prompt += " Also wish them a happy Halloween"
