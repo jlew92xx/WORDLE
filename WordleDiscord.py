@@ -244,7 +244,7 @@ class DiscordGameBot:
                 
                 self.currGames = {}
                 self.Today = datetime.today().date()
-                
+                self.setIcons()
                 self.wod = self.wordleDict.pickWordForTheDay(str(self.Today))
                 self.todaysPuzzleNumber = newPuzzNum
                 setStoredPuzzleNumber(newPuzzNum)
