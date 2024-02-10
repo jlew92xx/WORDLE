@@ -28,7 +28,7 @@ MAINDATABASE = 'playerStats.db'
 TESTDATABASE = 'testDatabase.db'
 
 MONTHICONS =[("./ICONS/snowman.png","./ICONS/winter.png"), #Jan
-        ("./ICONS/lincoln.png","./ICONS/martin-luther-king.png"), #Feb
+        ("./ICONS/cupid.png","./ICONS/love.png"), #Feb
         ("./ICONS/march_clover.png","./ICONS/march_rainbow.png"), #Mar
         ("./ICONS/april_sun-shower.png","./ICONS/flowers.png"), #Apr
         ("./ICONS/beach-ball.png","./ICONS/tulips.png"), #May
@@ -41,7 +41,6 @@ MONTHICONS =[("./ICONS/snowman.png","./ICONS/winter.png"), #Jan
         ("./ICONS/christmasTree.png","./ICONS/holly.png")] #Dec
 HOLIDAYICONS = {
     "1/1":("./ICONS/firework.png","./ICONS/champaign.png"),
-    "2/14":("./ICONS/cupid.png", "./ICONS/love.png"),
     "10/31":("./ICONS/jacko.png", "./ICONS/ghost.png"),
     "11/11":("./ICONS/veteran.png-", "./ICONS/soldier.png"),
     "12/31":("./ICONS/firework.png","./ICONS/champaign.png"),
@@ -415,6 +414,8 @@ class DiscordGameBot:
                                         prompt += " Also wish them a Happy Valentine Day"
                                     elif self.Today == datetime(currYear, 4, 1).date():
                                         prompt += " Also try to RickRoll them with a disguised link for April fools day"
+                                    elif isChineseNewYear(self.Today):
+                                        prompt += " Also wish them a happy Chinese New year " + str(currYear)
                                 except:
                                     pass
                                 prompt += ". Keep the response under a 1000 characters"
