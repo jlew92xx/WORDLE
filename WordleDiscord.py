@@ -53,6 +53,14 @@ returns turn or false if main or not:
 def isChineseNewYear(d:date)->bool:
     return d == LunarDate(d.year, 1,1).toSolarDate()
 
+def isChineseNewYearFestival(d:date)->bool:
+    cny = LunarDate(d.year, 1,1).toSolarDate()
+    delta = (d - cny).days
+    
+    output = delta >= -1 and delta <= 2
+    return output
+    
+
 def isEaster(i:date)->bool:
     d = easter(i.year)
     
@@ -182,7 +190,7 @@ class DiscordGameBot:
         if(keyDay in HOLIDAYICONS.keys()):
             tup = HOLIDAYICONS[keyDay]
             
-        elif(isChineseNewYear(self.Today)):
+        elif(isChineseNewYearFestival(self.Today)):
             tup = HOLIDAYICONS["CNY"]
         elif(isEaster(self.Today)):
             tup = HOLIDAYICONS["EASTER"]
