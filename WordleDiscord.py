@@ -19,6 +19,7 @@ from WordleDictionary import WordleDictionary
 import holidays
 from dateutil.easter import *
 from lunardate import LunarDate
+import WordleReactor as WR
 # import schedule
 TESTACCOUNT = "jayloo92test"
 EPOCH_DATE = date(2023, 6, 26)
@@ -47,9 +48,7 @@ HOLIDAYICONS = {
     "CNY": ("./ICONS/chineseDragon.png","./ICONS/chinese-new-year.png"),
     "EASTER": ("./ICONS/easter-egg.png", "./ICONS/rabbit.png")
 }
-"""
-returns turn or false if main or not:
-"""
+
 def isChineseNewYear(d:date)->bool:
     return d == LunarDate(d.year, 1,1).toSolarDate()
 
@@ -142,7 +141,7 @@ class DiscordGameBot:
     
 
     def __init__(self, app) -> None:
-        intents = discord.Intents.default()
+        intents = discord.Intents.all()
         intents.members = True
         self.client = discord.Client(intents=intents)
 
@@ -231,6 +230,11 @@ class DiscordGameBot:
 
             channelType = message.channel.type.name
             if channelType == 'text':
+                m = str(message.content).split("\n")
+                reactions = WR.getReactions(m)
+                if reactions != None:
+                    for reaction in reactions:
+                        await message.add_reaction(reaction)
                 return
             if message.author.bot:
                 if message.attachments:
