@@ -3,40 +3,42 @@ GREEN = "🟩"
 YELLOW = "🟨"
 WHITE = "⬜"
 BLACK = "⬛"
-#Yeah I know this is stupid but too lazy to change it.
+# Yeah I know this is stupid but too lazy to change it.
 GREENREACT = GREEN
 YELLOWREACT = YELLOW
 WHITEREACT = WHITE
 BLACKREACT = BLACK
-reactDict ={"1": "🤔",
-            "2": "🚂",
-            "3": "👏",
-            "4": "🏌️‍♀️",
-            "5": "👍",
-            "6": "😱",
-            "X": "🪦",
-            "⛈️":"🪦"}
+reactDict = {"1": "🤔",
+             "2": "🚂",
+             "3": "👏",
+             "4": "🏌️‍♀️",
+             "5": "👍",
+             "6": "😱",
+             "X": "🪦",
+             "⛈️": "🪦"}
 
-regStatement = "Wordle \d*\s([1-6]|X)/6"
-def getReactions(rawMsg:list):
-    
+regStatement = "Wordle \d*\s([1-6]|X|⛈️)/6"
+
+
+def getReactions(rawMsg: list):
+
     i = 0
     header = ""
     for line in rawMsg:
-        if(re.search(regStatement, line)):
+        if (re.search(regStatement, line)):
             header = line
             break
         i += 1
-    if(header == ""):
+    if (header == ""):
         return None
-    
+
     output = []
-    rest = rawMsg[i+2:]
+
     results = []
-    for line in rest:
-        if(re.search("(" + GREEN + "|" + YELLOW +"|"+ WHITE + "|" + BLACK + "){5}", line)):
+    for line in rawMsg:
+        if (re.search("(" + GREEN + "|" + YELLOW + "|" + WHITE + "|" + BLACK + "){5}", line)):
             results.append(line)
-    
+
     scoreList = header.split()
     copyList = list.copy(scoreList)
     for word in copyList:
@@ -44,10 +46,10 @@ def getReactions(rawMsg:list):
             break
         else:
             scoreList.pop(0)
-        
+
     score = scoreList[2][0]
     isWinner = not (score == "X" or score == "⛈️")
-    
+
     if not isWinner:
         siz = 6
     else:
@@ -57,24 +59,24 @@ def getReactions(rawMsg:list):
             return None
     if siz != len(results):
         return None
-    
-    if(score in reactDict.keys()):
+
+    if (score in reactDict.keys()):
         output.append(reactDict[score])
 
     winLine = GREEN * 5
-    
+
     if isWinner:
         lastLine = results.pop()
         if lastLine != winLine:
             return None
-        
+
     else:
         lastLine = results[siz - 1]
         if lastLine == winLine:
             return None
-        
+
     strResult = '\n'.join(results)
-    
+
     if WHITE in strResult and BLACK in strResult:
         return None
 
@@ -87,19 +89,17 @@ def getReactions(rawMsg:list):
             output.append(BLACKREACT)
         else:
             output.append(GREEN)
-            
+
     elif isGreenIn and not isYellowIn:
         output.append(GREENREACT)
     elif not isGreenIn and isYellowIn:
         output.append(YELLOWREACT)
-    
-        
+
     return output
-            
 
 
 if __name__ == '__main__':
     input = "dsfajfklsd asdfasdfdsWordle 965 2/6\n\n🟨⬜⬜🟨🟨\n🟩🟩🟩🟩🟩"
-    
+
     score = input.split("\n")
     getReactions(score)
