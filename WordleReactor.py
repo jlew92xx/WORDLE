@@ -14,8 +14,7 @@ reactDict = {"1": "🤔",
              "4": "🏌️‍♀️",
              "5": "👍",
              "6": "😱",
-             "X": "🪦",
-             "⛈️": "🪦"}
+             "X": "🪦"}
 
 regStatement = "Wordle \d*\s([1-6]|X|⛈️)/6"
 
@@ -48,10 +47,12 @@ def getReactions(rawMsg: list):
             scoreList.pop(0)
 
     score = scoreList[2][0]
-    isWinner = not (score == "X" or score == "⛈️")
+    #comparing emoji is too tricky. but 9928 is the storm cloud
+    isWinner = not(score == "X" or ord(score) == 9928)
 
     if not isWinner:
         siz = 6
+        score = "X"
     else:
         try:
             siz = int(score)
