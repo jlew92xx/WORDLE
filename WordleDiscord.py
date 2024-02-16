@@ -407,9 +407,10 @@ class DiscordGameBot:
                                             " barely won today's Wordle. One more wrong guess and they would of lost it because they had " + \
                                             str(guessCount)
                                     prompt += " guesses."
-                                
+                                    prompt += " Their win streak has increased to " + str(self.playStat.getStreak(username) + 1)
                                 else:
-                                    prompt = "Mercilessly mock " + username + " for losing today's wordle."
+                                    prompt = "Mercilessly mock " + username + " for losing today's wordle. "
+                                    prompt += " They lost their win streak of " + str(self.playStat.getStreak(username))
 
                                 prompt += "The word of the day was " + self.wod + \
                                     ". Their guess(es) were " + guessesCommas

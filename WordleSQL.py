@@ -161,7 +161,17 @@ class WordleSQL():
                                 name = ?""", (userName,))
         output = self.curs.fetchone()
         return output[0]
-
+    
+    def getStreak(self, userName):
+        self.curs.execute("""select
+                                Streak
+                            FROM
+                                playerStats
+                            WHERE
+                                name = ?""", (userName,))
+        output = self.curs.fetchone()
+        return output[0]
+        
     def setPrompt(self, userName, inPrompt):
         self.curs.execute("""UPDATE
                                     playerStats
