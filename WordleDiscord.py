@@ -412,7 +412,7 @@ class DiscordGameBot:
                                     prompt = "Mercilessly mock " + username + " for losing today's wordle. "
                                     prompt += " They lost their win streak of " + str(self.playStat.getStreak(username))
 
-                                prompt += "The word of the day was " + self.wod + \
+                                prompt += ". The word of the day was " + self.wod + \
                                     ". Their guess(es) were " + guessesCommas
                                 currYear = self.Today.year
 
