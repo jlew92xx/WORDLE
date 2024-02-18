@@ -7,6 +7,7 @@ import glob
 from PyQt5.QtWidgets import QApplication
 from PyQt5 import QtWidgets
 from MainWindow import MainWindow
+import WordleConfigure
 import time
 import ChatBot
 import asyncio
@@ -58,7 +59,19 @@ def isChineseNewYearFestival(d:date)->bool:
     
     output = delta >= -1 and delta <= 2
     return output
+
+def isThanksgiving(d:date)->bool:
+    ##if it's not in November
+    if date.month != 11:
+        return False
+    #if it's not a thursday
+    if date.weekday != 3:
+        return False  
+    day = date.day
+    if(day > 21 and day < 29):
+        return True
     
+    return False
 
 def isEaster(i:date)->bool:
     d = easter(i.year)
@@ -338,7 +351,7 @@ class DiscordGameBot:
                     self.currGames[username].replay(lines)
                 game = self.currGames[username]
                 if (not game.isDone):
-                    if (len(userMessage) == 5):
+                    if (len(userMessage) == WordleConfigure.WORDSIZE):
                         submittedWord = userMessage.upper().rstrip()
                         if (self.wordleDict.isWord(submittedWord)):
 
@@ -429,6 +442,8 @@ class DiscordGameBot:
                                         prompt += " Also try to RickRoll them with a disguised link for April fools day"
                                     elif isChineseNewYear(self.Today):
                                         prompt += " Also wish them a happy Chinese New year " + str(currYear)
+                                    elif isThanksgiving(self.Today):
+                                        prompt += " Also wish them a happy Thanksgiving"  
                                 except:
                                     pass
                                 prompt += ". Keep the response under a 1000 characters"
