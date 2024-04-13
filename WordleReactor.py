@@ -24,8 +24,11 @@ def getReactions(rawMsg: list):
     i = 0
     header = ""
     for line in rawMsg:
+        line = line.replace(',', '')
+        line = line.replace(' 🎉 ', ' ')
         if (re.search(regStatement, line)):
             header = line
+            rawMsg[i] = line
             break
         i += 1
     if (header == ""):
@@ -100,7 +103,7 @@ def getReactions(rawMsg: list):
 
 
 if __name__ == '__main__':
-    input = "dsfajfklsd asdfasdfdsWordle 965 2/6\n\n🟨⬜⬜🟨🟨\n🟩🟩🟩🟩🟩"
+    input = "Wordle 1,000 🎉 2/6\n\n⬜🟩⬜🟨⬜\n🟩🟩🟩🟩🟩"
 
     score = input.split("\n")
     getReactions(score)

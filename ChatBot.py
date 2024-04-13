@@ -20,4 +20,4 @@ def giveResponse(prompt, error):
 
 
 if __name__ == '__main__':
-    pass
+    print(giveResponse("try to rick roll me", "poop"))

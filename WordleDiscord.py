@@ -443,7 +443,9 @@ class DiscordGameBot:
                                     elif isChineseNewYear(self.Today):
                                         prompt += " Also wish them a happy Chinese New year " + str(currYear)
                                     elif isThanksgiving(self.Today):
-                                        prompt += " Also wish them a happy Thanksgiving"  
+                                        prompt += " Also wish them a happy Thanksgiving"
+                                    elif isEaster(self.Today):
+                                         prompt += " Also wish them a happy easter"
                                 except:
                                     pass
                                 prompt += ". Keep the response under a 1000 characters"
