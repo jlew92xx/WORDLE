@@ -8,13 +8,13 @@ GREENREACT = GREEN
 YELLOWREACT = YELLOW
 WHITEREACT = WHITE
 BLACKREACT = BLACK
-reactDict = {"1": "🤔",
-             "2": "🚂",
-             "3": "👏",
-             "4": "🏌️‍♀️",
-             "5": "👍",
-             "6": "😱",
-             "X": "🪦"}
+reactDict = {"1": ["🤔"],
+             "2": ["🚂"],
+             "3": ["👏", "🏀"],
+             "4": ["🏌️‍♀️"],
+             "5": ["👍"],
+             "6": ["😱"],
+             "X": ["🪦"]}
 
 regStatement = "Wordle \d*\s([1-6]|X|⛈️)/6"
 
@@ -65,7 +65,9 @@ def getReactions(rawMsg: list):
         return None
 
     if (score in reactDict.keys()):
-        output.append(reactDict[score])
+        listReact = reactDict[score]
+        for R in listReact:
+            output.append(R)
 
     winLine = GREEN * 5
 
