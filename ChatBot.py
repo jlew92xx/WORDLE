@@ -20,4 +20,10 @@ def giveResponse(prompt, error):
 
 
 if __name__ == '__main__':
-    print(giveResponse("try to rick roll me", "poop"))
+    output = ['f','uc','k']
+    botReact = giveResponse("give me 5 emojis to react to a losing wordle score on discord.", "poop")
+    print(botReact)
+    if botReact != "poop":
+        output.extend(list(botReact))
+            
+    print(output)

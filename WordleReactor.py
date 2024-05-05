@@ -1,4 +1,5 @@
 import re
+import ChatBot
 GREEN = "🟩"
 YELLOW = "🟨"
 WHITE = "⬜"
@@ -56,6 +57,11 @@ def getReactions(rawMsg: list):
     if not isWinner:
         siz = 6
         score = "X"
+        botReact = ChatBot.giveResponse("give me 5 emojis to react to a losing wordle score on discord. just the emojis nothing else. DO NOT NUMBER THEM. DO NOT TO PUT THEM ON DIFFERENT LINES. I just want five emoji one one line next each other with nothing between.", "poop")
+        print(botReact)
+        if botReact != "poop":
+            output.extend(list(botReact))
+            output = list(filter(None, output))
     else:
         try:
             siz = int(score)
@@ -105,7 +111,7 @@ def getReactions(rawMsg: list):
 
 
 if __name__ == '__main__':
-    input = "Wordle 1,000 🎉 2/6\n\n⬜🟩⬜🟨⬜\n🟩🟩🟩🟩🟩"
+    input = "Wordle 1,000 🎉 X/6\n\n⬜🟩⬜🟨⬜\n⬜🟩⬜🟨⬜\n⬜🟩⬜🟨⬜\n⬜🟩⬜🟨⬜\n⬜🟩⬜🟨⬜\n⬜🟩⬜🟨⬜"
 
     score = input.split("\n")
     getReactions(score)

@@ -247,7 +247,10 @@ class DiscordGameBot:
                 reactions = WR.getReactions(m)
                 if reactions != None:
                     for reaction in reactions:
-                        await message.add_reaction(reaction)
+                        try:
+                            await message.add_reaction(reaction)
+                        except:
+                            print(reaction)
                 return
             if message.author.bot:
                 if message.attachments:
