@@ -28,7 +28,8 @@ FILEPREFIX = "TEMP"
 MAIN = "main"
 MAINDATABASE = 'playerStats.db'
 TESTDATABASE = 'testDatabase.db'
-
+REMINDINGHOUR = 19
+REMINDINGMINUTE = 15
 MONTHICONS =[("./ICONS/snowman.png","./ICONS/winter.png"), #Jan
         ("./ICONS/cupid.png","./ICONS/love.png"), #Feb
         ("./ICONS/march_clover.png","./ICONS/march_rainbow.png"), #Mar
@@ -56,7 +57,7 @@ def isChineseNewYear(d:date)->bool:
 def isChineseNewYearFestival(d:date)->bool:
     cny = LunarDate(d.year, 1,1).toSolarDate()
     delta = (d - cny).days
-    
+    #if the delta between today's date and the chinese year new year is 1 day before or 2 days after then we show the
     output = delta >= -1 and delta <= 2
     return output
 
@@ -172,7 +173,7 @@ class DiscordGameBot:
         self.Today = datetime.today().date()
        
         self.setIcons()
-        
+        self.userObjects ={}
         self.wordleDict = WordleDictionary(SALT)
         self.wod = self.wordleDict.pickWordForTheDay(str(self.Today))
         self.todaysPuzzleNumber = getStoredPuzzleNumber()
@@ -217,13 +218,55 @@ class DiscordGameBot:
         async def on_ready():
             print(f'{self.client.user} is now running')
             self.WordleScoreChannel = self.client.get_channel(self.channelId)
-            
+            for user in self.client.users:
+                self.userObjects[user.name] = user
             self.Today = datetime.today().date()
-
+            msg1.start()
+        
+        # Message 1
+        @tasks.loop(hours=24)
+        async def msg1():
+            #message_channel = self.client.get_channel(705524214270132367)
+            #await message_channel.send("test 1")
+            userdata = self.playStat.getPlayersToBeReminded()
+            for user in userdata:
+                username = user[0]
+                streak = user[1]
+                msg = f"""Greetings {user.display_name},
+                This is a reminder from your favorite WordBot to play my Wordle for today."""
+                if streak == 0:
+                    msg += """ There is no better day than today to start your win streak (if you can win this simple game). """
+                else:
+                    msg += f"""If you want to continue your streak of {streak}, I strongly suggest you play me before it is too late, but I'm not your boss (but maybe someday;))."""
+                
+                msg += """ You can shut me up by sending me \"!mute\" if you're rude and send me \"!unmute\" if you were rude and came to your senses. Thank you for being a member of Weer Wolerr! It means the world to me!
+                
+                VWOWDER WORRRMLEER!
+                
+                WordBot"""
+                
+                try:
+                    await self.userObjects[username].send(msg)
+                    print("Reminder sent to " + username + " at " +  datetime.now().__str__())
+                except:
+                    print("Failure to send Reminder to " + username + " at " +  datetime.now().__str__())   
+                
+            
+        @msg1.before_loop
+        async def before_msg1():
+            for _ in range(60*60*24):  # loop the whole day
+                if datetime.now().hour  == REMINDINGHOUR and datetime.now().minute == REMINDINGMINUTE:  # 24 hour format
+                    print('It is time')
+                    return
+                await asyncio.sleep(1)
+                
+                
         @self.client.event
         async def on_member_join(member: discord.Member):
+            name = member.name
+            self.userObjects[name] = member
             if ISMAIN:
-                name = member.name
+                
                 prompt = f"""Write a welcome message for {member.name} to my wordle discord server named Weer Wolerr. 
                 Tell them they can play your wordle by sending you the message \"play\". Tell they can also change your personality by sending you a message
                 with an exclamation point followed by person \"=\" and their desired personality.\
@@ -306,6 +349,7 @@ class DiscordGameBot:
 
                             await message.author.send("Hardmode is off")
                             self.playStat.setHardMode(0, username)
+                    
                         else:
                             await message.author.send("Invalid option: say \"on\" or \"off\"")
                     
@@ -317,7 +361,12 @@ class DiscordGameBot:
                         self.playStat.resetGame()
                         if not notInCurrGames:
                             self.currGames.pop(username)
-                    
+                    elif commandWord == "mute":
+                        self.playStat.setMute(username, 1)
+                        await message.author.send("OK OK I'll shutup :/")
+                    elif commandWord == "unmute":
+                        await message.author.send("I'll remind you at 7pm CST to play some delicious Wordle.")
+                        self.playStat.setMute( username, 0)
                 else:
                     await message.author.send("Invalid Command.")
 

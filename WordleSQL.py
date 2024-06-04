@@ -23,6 +23,7 @@ class WordleSQL():
             currGame text,
             doneWithFirst integer,
             isPlaying integer,
+            muted integer,
             UNIQUE(name)
             
             
@@ -42,9 +43,9 @@ class WordleSQL():
         if len(data) == 0:
             characterName = ChatBot.giveResponse(
                 "A nonsensical hero name", "A jerk Named Jonathan Lewis")
-            params = (name, 0, 0, 0, 0, "False", characterName, 0, "", 0, 0)
+            params = (name, 0, 0, 0, 0, "False", characterName, 0, "", 0, 0, 0)
             self.curs.execute(
-                "INSERT OR IGNORE INTO playerStats VALUES(?,?,?,?,?,?,?,?,?,?,?)", params)
+                "INSERT OR IGNORE INTO playerStats VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", params)
             self.conn.commit()
 
     def printTableToConsole(self):
@@ -152,6 +153,12 @@ class WordleSQL():
                           """)
         self.conn.commit()
         
+        
+    def setDefaultValue(self, column, value):
+        command = "UPDATE playerStats\nSET\n" + column + " = " + str(value)
+        self.curs.execute(command)
+        self.conn.commit()
+           
     def getPrompt(self, userName):
         self.curs.execute("""select
                                 prompt
@@ -161,6 +168,17 @@ class WordleSQL():
                                 name = ?""", (userName,))
         output = self.curs.fetchone()
         return output[0]
+    
+    def getPlayersToBeReminded(self):
+        self.curs.execute("""select
+                                name, Streak
+                            FROM
+                                playerStats
+                            WHERE
+                                doneWithFirst = 0 AND muted = 0""")
+        output = self.curs.fetchall()
+        return output
+        
     
     def getStreak(self, userName):
         self.curs.execute("""select
@@ -199,6 +217,17 @@ class WordleSQL():
                                     WHERE
                                         name = ?""", (on, username,))
         self.conn.commit()
+    
+    def setMute(self, username: str, on:int):
+
+        self.curs.execute("""UPDATE
+                                    playerStats
+                                    SET
+                                        muted = ?
+                                    WHERE
+                                        name = ?""", (on, username,))
+        self.conn.commit()       
+        
 
     def getHardmode(self, userName) -> bool:
         self.curs.execute("""select
@@ -251,7 +280,6 @@ class WordleSQL():
 
 if __name__ == '__main__':
     wsql = WordleSQL("playerStats.db")
-
-    wsql.addColumnWithDefaultValue("doneWithFirst","integer","0")
-    wsql.addColumnWithDefaultValue("isPlaying","integer","0")
+    listy = wsql.getPlayersToBeReminded()
+    listy.append("farts")
     
