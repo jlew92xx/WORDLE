@@ -29,7 +29,7 @@ MAIN = "main"
 MAINDATABASE = 'playerStats.db'
 TESTDATABASE = 'testDatabase.db'
 REMINDINGHOUR = 19
-REMINDINGMINUTE = 15
+REMINDINGMINUTE = 20
 MONTHICONS =[("./ICONS/snowman.png","./ICONS/winter.png"), #Jan
         ("./ICONS/cupid.png","./ICONS/love.png"), #Feb
         ("./ICONS/march_clover.png","./ICONS/march_rainbow.png"), #Mar
@@ -232,7 +232,7 @@ class DiscordGameBot:
             for user in userdata:
                 username = user[0]
                 streak = user[1]
-                msg = f"""Greetings {user.display_name},
+                msg = f"""Greetings {username},
                 This is a reminder from your favorite WordBot to play my Wordle for today."""
                 if streak == 0:
                     msg += """ There is no better day than today to start your win streak (if you can win this simple game). """
