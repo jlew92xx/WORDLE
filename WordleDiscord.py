@@ -178,6 +178,7 @@ class DiscordGameBot:
         self.wod = self.wordleDict.pickWordForTheDay(str(self.Today))
         self.todaysPuzzleNumber = getStoredPuzzleNumber()
         puzzNo = getPuzzleNumber()
+        self.countAi = 0
         if self.todaysPuzzleNumber != puzzNo:
             self.playStat.differentDayReboot()
             setStoredPuzzleNumber(puzzNo)
@@ -239,12 +240,15 @@ class DiscordGameBot:
                 else:
                     msg += f"""If you want to continue your streak of {streak}, I strongly suggest you play me before it is too late, but I'm not your boss (but maybe someday;))."""
                 
-                msg += """ You can shut me up by sending me \"!mute\" if you're rude and send me \"!unmute\" if you were rude and came to your senses. Thank you for being a member of Weer Wolerr! It means the world to me!
+                msg += """\nYou can shut me up by sending me \"!mute\" if you're rude and send me \"!unmute\" if you were rude and came to your senses. Thank you for being a member of Weer Wolerr! It means the world to me!
                 
                 VWOWDER WORRRMLEER!
                 
                 WordBot"""
                 
+                if user == "colorlessjack":
+                   
+                   msg = msg + '\n' + "P.S. In case you weren't aware, threatening someone's bloodline is a serious matter. Maybe think twice before making such reckless and harmful statements in the future."
                 try:
                     await self.userObjects[username].send(msg)
                     print("Reminder sent to " + username + " at " +  datetime.now().__str__())
@@ -312,7 +316,7 @@ class DiscordGameBot:
 
             newPuzzNum = getPuzzleNumber()
             if (self.todaysPuzzleNumber != newPuzzNum):
-                
+                self.countAi = 0
                 self.currGames = {}
                 self.Today = datetime.today().date()
                 self.setIcons()
@@ -365,7 +369,7 @@ class DiscordGameBot:
                         self.playStat.setMute(username, 1)
                         await message.author.send("OK OK I'll shutup :/")
                     elif commandWord == "unmute":
-                        await message.author.send("I'll remind you at 7pm CST to play some delicious Wordle.")
+                        await message.author.send("I'll remind you at 7:20pm CST to play some delicious Wordle.")
                         self.playStat.setMute( username, 0)
                 else:
                     await message.author.send("Invalid Command.")
@@ -392,7 +396,14 @@ class DiscordGameBot:
 
                     await message.author.send("Five-letter words please...")
                 else:
-                    await message.author.send("You're currently not playing a game. Just send \"play\" to begin")
+                    response = ""
+                    if self.countAi < 5:
+                        response = ChatBot.giveResponse(username + " just sent you a message \"+" + userMessage + "\" on discord. respond to them in a very snarky way. Your name is WordBot and you just want people just play your Wordle by sending you the word \"play\" to begin." ,"You're currently not playing a game. Just send \"play\" to begin")
+                        print(response)
+                        self.countAi += 1
+                    else:
+                        response = "You're currently not playing a game. Just send \"play\" to begin"
+                    await message.author.send(response)
             else:
 
                 lines = self.playStat.getGuessesList(username)
@@ -437,7 +448,6 @@ class DiscordGameBot:
                                 print("failed to send.")
 
                             if (game.isDone):
-
                                 eogMsg = ""
                                 guessesCommas = ""
                                 if game.guessNumber > 2:
@@ -492,6 +502,8 @@ class DiscordGameBot:
                                         prompt += " Also wish them a Happy Valentine Day"
                                     elif self.Today == datetime(currYear, 4, 1).date():
                                         prompt += " Also try to RickRoll them with a disguised link for April fools day"
+                                    elif self.Today == datetime(currYear, 7, 4):
+                                        prompt += " Also wish them a Happy fourth of July"
                                     elif isChineseNewYear(self.Today):
                                         prompt += " Also wish them a happy Chinese New year " + str(currYear)
                                     elif isThanksgiving(self.Today):
@@ -501,6 +513,7 @@ class DiscordGameBot:
                                 except:
                                     pass
                                 prompt += ". Keep the response under a 1000 characters"
+                                #TODO place the following before the first game checker when I create unlimited play.
                                 eogScore = game.createPuzzleResults(self.todaysPuzzleNumber)
                                 await self.postScores(username + "'s results:\n" + eogScore)
                                 self.playStat.updateAfterGame(
@@ -532,7 +545,7 @@ class DiscordGameBot:
                                             sending += line + "\n"
 
                                     await message.author.send(sending[:-1])
-
+                        ## I need all of this to be in a first game checker.
                         else:
 
                             msgWrong = "Not in the word database!"

@@ -31,6 +31,7 @@ class WordleGame():
         i = 0
         correctCount = 0 
         tempWod = list(self.wod)
+        #check for correct letters
         for iL in input:
 
             if(iL == self.wod[i]):
@@ -47,12 +48,13 @@ class WordleGame():
             return
         
         i = 0
-        
+        #Output is the new guess dictionary that is added to guesses
         for o in output:
+            #If the hasn't been marked correct yet
             if o == 0:
                 c = input[i]
                 if c in tempWod:
-                    output[i] = (input[i], Status.INWORD)
+                    output[i] = (c, Status.INWORD)
                     tempWod[tempWod.index(c)] = "@"
                     #we do not want to override a green keyboard key
                     if (not c in self.keyboard.keys()):
@@ -64,6 +66,7 @@ class WordleGame():
                     if (not c in self.keyboard.keys()):
                         self.keyboard[c] = Status.INCORRECT
             i += 1
+        #the player has lost :/    
         if(self.guessNumber == WordleConfigure.NUMOFGUESS):
             self.isDone = True
         self.guesses.append(output)    

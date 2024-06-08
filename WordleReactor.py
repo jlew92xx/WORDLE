@@ -25,8 +25,10 @@ def getReactions(rawMsg: list):
     i = 0
     header = ""
     for line in rawMsg:
+        #For some reason, NYTs decided to add a comma in their puzzle number we must replace it.
         line = line.replace(',', '')
-        line = line.replace(' 🎉 ', ' ')
+        
+        
         if (re.search(regStatement, line)):
             header = line
             rawMsg[i] = line

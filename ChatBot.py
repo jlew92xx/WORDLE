@@ -20,10 +20,7 @@ def giveResponse(prompt, error):
 
 
 if __name__ == '__main__':
-    output = ['f','uc','k']
-    botReact = giveResponse("give me 5 emojis to react to a losing wordle score on discord.", "poop")
-    print(botReact)
-    if botReact != "poop":
-        output.extend(list(botReact))
-            
-    print(output)
+    
+    ps = giveResponse("Write a postscript for a guy named Jack who threatened to end your bloodline include the P.S.", "P.S it will be me who ends your bloodline")
+    print("ps to jack:", ps)
+      
