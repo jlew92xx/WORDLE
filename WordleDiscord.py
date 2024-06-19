@@ -1,4 +1,5 @@
 import discord
+import discord.utils as discordTools
 from discord.ext import tasks
 from discord.ext.commands import Bot
 import sys
@@ -28,8 +29,11 @@ FILEPREFIX = "TEMP"
 MAIN = "main"
 MAINDATABASE = 'playerStats.db'
 TESTDATABASE = 'testDatabase.db'
+MAINGUILDID = 1127338015249944596
+TESTGUILDID = 1132882138941886525
 REMINDINGHOUR = 19
 REMINDINGMINUTE = 20
+GROUPWORDLE = "group-wordle"
 MONTHICONS =[("./ICONS/snowman.png","./ICONS/winter.png"), #Jan
         ("./ICONS/cupid.png","./ICONS/love.png"), #Feb
         ("./ICONS/march_clover.png","./ICONS/march_rainbow.png"), #Mar
@@ -142,17 +146,18 @@ TOKEN = token[0]
     
 
 
-
-guildId = 1127338015249944596
+NUM_PUBLIC_CHANNEL = 5
+ 
 todaysWordlers = 'todays-wordlers'
 
 
 class DiscordGameBot:
     lastPictureMsg = {}
     currGames = {}
+    publicGames = {}    
     mainwindow = None
     unlocked = True
-    
+    guildId = 0
 
     def __init__(self, app) -> None:
         intents = discord.Intents.all()
@@ -166,10 +171,12 @@ class DiscordGameBot:
         if ISMAIN:
             self.channelId = JLWORDLECHANNELID
             self.playStat = WordleSQL(MAINDATABASE)
+            self.guildId = MAINGUILDID
             
         else:
             self.channelId = TESTCHANNELID
             self.playStat = WordleSQL(TESTDATABASE)
+            self.guildId = TESTGUILDID
         self.Today = datetime.today().date()
        
         self.setIcons()
@@ -201,6 +208,7 @@ class DiscordGameBot:
     def setIcons(self):
         keyDay = convertMonthDayStr(self.Today)
         tup = None
+        
         if(keyDay in HOLIDAYICONS.keys()):
             tup = HOLIDAYICONS[keyDay]
             
@@ -222,6 +230,7 @@ class DiscordGameBot:
             for user in self.client.users:
                 self.userObjects[user.name] = user
             self.Today = datetime.today().date()
+            await self.createChannels() #creates the public channels.
             msg1.start()
         
         # Message 1
@@ -289,7 +298,11 @@ class DiscordGameBot:
         async def on_message(message):
 
             channelType = message.channel.type.name
+            tag = message.mentions
+            isGroupWordle = False
+            
             if channelType == 'text':
+                isGroupWordle = (GROUPWORDLE in message.channel.name)
                 m = str(message.content).split("\n")
                 reactions = WR.getReactions(m)
                 if reactions != None:
@@ -298,7 +311,8 @@ class DiscordGameBot:
                             await message.add_reaction(reaction)
                         except:
                             print(reaction)
-                return
+                if not isGroupWordle:
+                    return
             if message.author.bot:
                 if message.attachments:
                     #TODO fix this 
@@ -309,7 +323,8 @@ class DiscordGameBot:
                         await lastPicMsg.delete()
                     except:
                         pass
-                    self.lastPictureMsg[userNameFile] = message.id
+                    if(message.content == ""):
+                        self.lastPictureMsg[userNameFile] = message.id
                 return
 
             msgDate = message.created_at - timedelta(hours=6)
@@ -328,8 +343,8 @@ class DiscordGameBot:
 
             username = str(message.author)
             userMessage = str(message.content)
-            channel = str(message.channel)
-            print(f"{username} said '{userMessage}' {(channel)}")
+            channelName = str(message.channel)
+            print(f"{username} said '{userMessage}' {(channelName)}")
             self.playStat.insertPlayer(username)
             notInCurrGames = not username in self.currGames.keys()
             if (userMessage.startswith('!')):
@@ -356,13 +371,46 @@ class DiscordGameBot:
                     
                         else:
                             await message.author.send("Invalid option: say \"on\" or \"off\"")
-                    
+                    elif commandWord == "chall":
+                        #TODO add a checker if another  game is being play
+                        isInDict = channelName in self.publicGames.keys()
+                        if (isInDict and self.publicGames[channelName] != None):
+                            await message.channel.send("A game is already being played")
+                            return
+                        params = paramWord.split(" ")
+                        if len(params) != 2:
+                            await message.channel.send("Takes only two params: Tagged name and the suggested word serpated by a space")
+                            return
+                        id = params[0]
+                        if len(message.mentions) != 1:
+                            await message.channel.send("You have to mention one and only person in the first param of the challenge the command.")
+                            return
+                        memb = message.mentions[0]
+                       
+                        
+                        wordToBGuessed = params[1]
+                        wordToBGuessed = wordToBGuessed.replace('|', "")
+                        if self.wordleDict.isWord(wordToBGuessed):
+                             await memb.send(f"{username} has challenge you in a game of Wordle in which they chose a word for you.\nPlay in the group-wordle channel! You follow the link to the proper channel <#{message.channel.id}>")
+                             await message.channel.send(f"{username} has challenged {memb.name} in a game of wordle.\nYou can challenge someone after this game by sending !chall = @<username> ||<word>||\n Just make sure there is a space between the username and the word")
+                             self.publicGames[channelName] = WordleGame(memb.name, wordToBGuessed, False)
+                        
+                        await message.delete()
+                        
                         
                     else:
                         await message.author.send("Invalid Command.")
                 elif(len(command) == 1):
-                    if not ISMAIN and commandWord == "reset":
-                        self.playStat.resetGame()
+                    if (not ISMAIN or isGroupWordle) and commandWord == "reset":
+                        if not ISMAIN:
+                            self.playStat.resetGame()
+                        elif isGroupWordle:
+                            try:
+                                self.playStat.updateGroupWordle(GROUPWORDLE)
+                                self.wordleDict[GROUPWORDLE] = None
+                            except:
+                                pass
+                                
                         if not notInCurrGames:
                             self.currGames.pop(username)
                     elif commandWord == "mute":
@@ -371,31 +419,45 @@ class DiscordGameBot:
                     elif commandWord == "unmute":
                         await message.author.send("I'll remind you at 7:20pm CST to play some delicious Wordle.")
                         self.playStat.setMute( username, 0)
+                    else:
+                        await message.channel.send("Invalid Command.")
                 else:
                     await message.author.send("Invalid Command.")
 
                 return
             userMessage = userMessage.lower()
 
-        
-
-            notPlaying = not self.playStat.getIsPlaying(username)
-            hasPlayedFirst = self.playStat.getDoneWithFirst(username)
-           
+            notPlaying = False
+            hasPlayedFirst = False
+            if not isGroupWordle:
+                notPlaying = not self.playStat.getIsPlaying(username)
+                hasPlayedFirst = self.playStat.getDoneWithFirst(username)
+            else:
+                isInDict = channelName in self.publicGames.keys()
+                if(isInDict):
+                    isValueNone = self.publicGames[channelName]
+                notPlaying = not (channelName in self.publicGames.keys() and self.publicGames[channelName] != None)
+                notInCurrGames = False
+                
             if (notPlaying):
                 
                 if(hasPlayedFirst):
                     await message.author.send("You're done. Leave me alone")
                     return
                 if userMessage == "play":
-                    self.playStat.insertPlayer(username)
                     
-                    newGame = WordleGame(username, self.wod, True)
-                    self.currGames[username] = newGame
-                    self.playStat.beginFirstGame(username)
+                    if isGroupWordle:
+                        todayStr = str(datetime.now())
+                        newGame = WordleGame(username, self.wordleDict.pickWordForTheDay(todayStr), True)
+                        self.publicGames[channelName] = newGame
+                        
+                    else:
+                        newGame = WordleGame(username, self.wod, True)
+                        self.currGames[username] = newGame
+                        self.playStat.beginFirstGame(username)
 
-                    await message.author.send("Five-letter words please...")
-                else:
+                    await message.channel.send("Five-letter words please...")
+                elif not isGroupWordle:
                     response = ""
                     if self.countAi < 5:
                         response = ChatBot.giveResponse(username + " just sent you a message \"+" + userMessage + "\" on discord. respond to them in a very snarky way. Your name is WordBot and you just want people just play your Wordle by sending you the word \"play\" to begin." ,"You're currently not playing a game. Just send \"play\" to begin")
@@ -403,34 +465,47 @@ class DiscordGameBot:
                         self.countAi += 1
                     else:
                         response = "You're currently not playing a game. Just send \"play\" to begin"
-                    await message.author.send(response)
+                    await message.channel.send(response)
+                else:
+                    print("it thinks its not playing.")
             else:
 
                 lines = self.playStat.getGuessesList(username)
 
-                if (notInCurrGames):
+                if (notInCurrGames and not isGroupWordle):
                     # create a replay and add it to the dictionary
                     self.currGames[username] = WordleGame(username, self.wod, True)
                     self.currGames[username].replay(lines)
-                game = self.currGames[username]
+                game = None
+                if not isGroupWordle:
+                    game = self.currGames[username]
+                else:
+                    game = self.publicGames[channelName]
+                    #TODO make it where the person being challenge can only play
+                    #if it's not an open game and the person who should not be playing tries to play.
+                    if not game.isOpen and game.name != username:
+                        await message.channel.send(f"{game.name} is currently playing a challenge game in this channel. You use another open group-wordle channel if you please.")
+                        return
                 if (not game.isDone):
                     if (len(userMessage) == WordleConfigure.WORDSIZE):
                         submittedWord = userMessage.upper().rstrip()
                         if (self.wordleDict.isWord(submittedWord)):
-
-
-                            self.playStat.appendGuess(submittedWord, username)
-
+                            filenamePic = ""
+                            if not isGroupWordle:
+                                self.playStat.appendGuess(submittedWord, username)
+                                filenamePic = pictureDir + username + ".jpg"
+                            else:
+                                filenamePic = pictureDir + channelName + ".jpg"
                             game.eval(submittedWord)
                             self.mainwindow.paintGame(
                                 game.guesses)
                             self.mainwindow.evalKeyboard(
                                 game.keyboard)
 
-                            filenamePic = pictureDir + username + ".jpg"
+                            
                             didLose = game.isDone and not game.isWinner
                             if didLose:
-                                self.mainwindow.showTempMsg(self.wod, "red")
+                                self.mainwindow.showTempMsg(game.wod, "red")
                             self.app.processEvents()
                             self.captureScreenShot( filenamePic)
                             if didLose:
@@ -439,7 +514,7 @@ class DiscordGameBot:
                             self.app.processEvents()
                             try:
 
-                                await message.author.send("", file=discord.File(filenamePic))
+                                await message.channel.send("", file=discord.File(filenamePic))
                                 print(username + " Message sent at " +
                                       str(datetime.now()))
 
@@ -448,6 +523,19 @@ class DiscordGameBot:
                                 print("failed to send.")
 
                             if (game.isDone):
+                                if isGroupWordle:
+                                    tittle =f"{username} has completed the game."
+                                    desc = "Put some bull bird here later."
+                                    ava = message.author.display_avatar
+                                    color =  discord.Colour.green()
+                                    em = discord.Embed(title = tittle, description = desc, colour = color)
+                                    em.set_author(name = f"{username}")
+                                    em.set_thumbnail(url = f"{ava}")
+                                    em.set_image(url = f'attachment://{filenamePic}')
+                                    await message.channel.send(embed = em, file=discord.File(filenamePic))
+                                    self.publicGames[channelName] = None
+
+                                    return
                                 eogMsg = ""
                                 guessesCommas = ""
                                 if game.guessNumber > 2:
@@ -549,14 +637,15 @@ class DiscordGameBot:
                         else:
 
                             msgWrong = "Not in the word database!"
-                            await message.author.send(msgWrong)
+                            await message.channel.send(msgWrong)
                             if (self.currGames[username].guessNumber > 0):
-                                await message.author.send("", file=discord.File(pictureDir + username + ".jpg"))
+                                await message.channel.send("", file=discord.File(pictureDir + username + ".jpg"))
 
                     else:
-                        await message.author.send("You're currently playing a game. Please try sending a 5-letter word")
-                        if (self.currGames[username].guessNumber > 0):
-                            await message.author.send("", file=discord.File(pictureDir + username + ".jpg"))
+                        if not isGroupWordle:
+                            await message.channel.send("You're currently playing a game. Please try sending a 5-letter word")
+                            if (game.guessNumber > 0):
+                                await message.channel.send("", file=discord.File(pictureDir + username + ".jpg"))
                             
 
         self.client.run(TOKEN)
@@ -582,9 +671,23 @@ class DiscordGameBot:
         time.sleep(.1)
         screenShot.save(fileName, 'jpg')
 
-    async def receiveMessage(self):
-        pass
+    async def createChannels(self):
+        guild = self.client.get_guild(self.guildId)
+        i = 0
+        channelName = ""
+        mycategory = discordTools.get(guild.categories,name="group-wordle")
+        if mycategory == None:
+           mycategory = await guild.create_category("group-wordle")
+           
+        while i < NUM_PUBLIC_CHANNEL:
+            channelName = "group-wordle-" + str(i)
+            channel = discordTools.get(guild.text_channels, name=channelName)
+            if channel == None:
+                channel = await guild.create_text_channel(channelName, category=mycategory)
+            
+            i += 1
 
+    
 if __name__ == '__main__':
     
     app = QApplication(sys.argv)

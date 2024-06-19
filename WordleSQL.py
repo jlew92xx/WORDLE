@@ -40,10 +40,13 @@ class WordleSQL():
         self.curs.execute(
             "SELECT name FROM playerStats WHERE name = ?", (name,))
         data = self.curs.fetchall()
+        muted = 0
+        if(name == "group-wordle"):
+            muted = 1
         if len(data) == 0:
             characterName = ChatBot.giveResponse(
                 "A nonsensical hero name", "A jerk Named Jonathan Lewis")
-            params = (name, 0, 0, 0, 0, "False", characterName, 0, "", 0, 0, 0)
+            params = (name, 0, 0, 0, 0, "False", characterName, 0, "", 0, 0, muted)
             self.curs.execute(
                 "INSERT OR IGNORE INTO playerStats VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", params)
             self.conn.commit()
@@ -71,7 +74,14 @@ class WordleSQL():
                                 WHERE 
                                     name = ?""", (username, ))
         self.conn.commit() 
-
+    def updateGroupWordle(self, name):
+        self.curs.execute("""UPDATE
+                                playerStats 
+                                SET
+                                    isPlaying = 0,
+                                    currGame = ""
+                                where name = ?""", (name,))
+        self.conn.commit() 
     def updateAfterGame(self, name, isWinner: bool, guesses: int):
         if (isWinner):
             self.curs.execute("""UPDATE

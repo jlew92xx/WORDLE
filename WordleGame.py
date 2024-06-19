@@ -4,14 +4,14 @@ class WordleGame():
 
 
 
-    def __init__(self, name, wod, isFirstGame) -> None:
+    def __init__(self, name, wod, isOpen:bool) -> None:
         self.guesses = []
         self.keyboard = {}
         self.isDone = False
         self.isWinner = False
-        self.isFirstGame = isFirstGame
+        self.isOpen = isOpen
         self.name = name
-        self.wod = wod
+        self.wod = wod.upper()
         self.guessNumber = 0
         
     def replay(self, words:list):
