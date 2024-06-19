@@ -290,6 +290,6 @@ class WordleSQL():
 
 if __name__ == '__main__':
     wsql = WordleSQL("playerStats.db")
-    listy = wsql.getPlayersToBeReminded()
-    listy.append("farts")
+    wsql.dailyReset()
+    
     
