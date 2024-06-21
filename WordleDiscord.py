@@ -319,12 +319,16 @@ class DiscordGameBot:
                     userNameFile = Path(
                         message.attachments[0].filename).with_suffix('').name
                     try:
-                        lastPicMsg = await message.channel.fetch_message(self.lastPictureMsg[userNameFile])
-                        await lastPicMsg.delete()
+                        if userNameFile in self.lastPictureMsg.keys():
+                            lastPicMsg = self.lastPictureMsg[userNameFile]
+                            await lastPicMsg.delete()
                     except:
                         pass
-                    if(message.content == ""):
-                        self.lastPictureMsg[userNameFile] = message.id
+                    if(message.embeds == []):
+                        self.lastPictureMsg[userNameFile] = message
+                    else:
+                        if userNameFile in self.lastPictureMsg.keys():
+                            del self.lastPictureMsg[userNameFile]
                 return
 
             msgDate = message.created_at - timedelta(hours=6)
@@ -484,18 +488,20 @@ class DiscordGameBot:
                     #TODO make it where the person being challenge can only play
                     #if it's not an open game and the person who should not be playing tries to play.
                     if not game.isOpen and game.name != username:
-                        await message.channel.send(f"{game.name} is currently playing a challenge game in this channel. You use another open group-wordle channel if you please.")
+                        if(self.wordleDict.isWord(userMessage.upper().rstrip()) or userMessage == "play"):
+                            await message.channel.send(f"{game.name} is currently playing a challenge game in this channel. You use another open group-wordle channel if you please.")
                         return
                 if (not game.isDone):
                     if (len(userMessage) == WordleConfigure.WORDSIZE):
                         submittedWord = userMessage.upper().rstrip()
                         if (self.wordleDict.isWord(submittedWord)):
-                            filenamePic = ""
+                            filenamePic = pictureDir
                             if not isGroupWordle:
                                 self.playStat.appendGuess(submittedWord, username)
-                                filenamePic = pictureDir + username + ".jpg"
+                                filenamePic += username
                             else:
-                                filenamePic = pictureDir + channelName + ".jpg"
+                                filenamePic += channelName
+                            filenamePic += ".jpg"
                             game.eval(submittedWord)
                             self.mainwindow.paintGame(
                                 game.guesses)
@@ -638,8 +644,15 @@ class DiscordGameBot:
 
                             msgWrong = "Not in the word database!"
                             await message.channel.send(msgWrong)
-                            if (self.currGames[username].guessNumber > 0):
-                                await message.channel.send("", file=discord.File(pictureDir + username + ".jpg"))
+                            
+                            if (game.guessNumber > 0):
+                                pictureResendPath = pictureDir
+                                if isGroupWordle:
+                                    pictureResendPath += channelName
+                                else:
+                                    pictureResendPath += username
+                                pictureResendPath += ".jpg"
+                                await message.channel.send("", file=discord.File(pictureResendPath))
 
                     else:
                         if not isGroupWordle:
