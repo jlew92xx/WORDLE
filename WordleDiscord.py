@@ -3,6 +3,7 @@ import discord.utils as discordTools
 from discord.ext import tasks
 from discord.ext.commands import Bot
 import sys
+import re
 import os
 import glob
 from PyQt5.QtWidgets import QApplication
@@ -355,7 +356,36 @@ class DiscordGameBot:
                 userMessage = userMessage.replace("!", "")
                 command = userMessage.split("=")
                 commandWord = command[0].lower().strip()
-                if (len(command) == 2):
+                
+                if commandWord == "chall":
+                    #TODO add a checker if another  game is being play
+                    isInDict = channelName in self.publicGames.keys()
+                    if (isInDict and self.publicGames[channelName] != None):
+                        await message.channel.send("A game is already being played")
+                        return
+                    paramWord = command[1].strip()
+                    params = paramWord.strip().split(" ")
+                
+                    if len(message.mentions) != 1:
+                        await message.channel.send("You have to mention one and only person in the first param of the challenge the command.")
+                        return
+                    memb = message.mentions[0]
+                    
+                    
+                    wordToBGuessed = params[-1]
+                    # if (not re.search("\|\|*\|\|", wordToBGuessed)):
+                    #     await message.channel.send("You must surround your guess with \"||.\"")
+                    #     await message.delete()
+                    #     return
+                    wordToBGuessed = wordToBGuessed.replace('|', "")
+                    if self.wordleDict.isWord(wordToBGuessed):
+                            await memb.send(f"{username} has challenge you in a game of Wordle in which they chose a word for you.\nPlay in the group-wordle channel! You follow the link to the proper channel <#{message.channel.id}>")
+                            await message.channel.send(f"{username} has challenged {memb.name} in a game of wordle.\nYou can challenge someone after this game by sending !chall = @<username> ||<word>||\n Just make sure there is a space between the username and the word")
+                            self.publicGames[channelName] = WordleGame(memb.name, wordToBGuessed, False)
+                    
+                    await message.delete()
+                    
+                elif (len(command) == 2):
                     
                     paramWord = command[1].strip()
 
@@ -375,31 +405,7 @@ class DiscordGameBot:
                     
                         else:
                             await message.author.send("Invalid option: say \"on\" or \"off\"")
-                    elif commandWord == "chall":
-                        #TODO add a checker if another  game is being play
-                        isInDict = channelName in self.publicGames.keys()
-                        if (isInDict and self.publicGames[channelName] != None):
-                            await message.channel.send("A game is already being played")
-                            return
-                        params = paramWord.split(" ")
-                        if len(params) != 2:
-                            await message.channel.send("Takes only two params: Tagged name and the suggested word serpated by a space")
-                            return
-                        id = params[0]
-                        if len(message.mentions) != 1:
-                            await message.channel.send("You have to mention one and only person in the first param of the challenge the command.")
-                            return
-                        memb = message.mentions[0]
-                       
-                        
-                        wordToBGuessed = params[1]
-                        wordToBGuessed = wordToBGuessed.replace('|', "")
-                        if self.wordleDict.isWord(wordToBGuessed):
-                             await memb.send(f"{username} has challenge you in a game of Wordle in which they chose a word for you.\nPlay in the group-wordle channel! You follow the link to the proper channel <#{message.channel.id}>")
-                             await message.channel.send(f"{username} has challenged {memb.name} in a game of wordle.\nYou can challenge someone after this game by sending !chall = @<username> ||<word>||\n Just make sure there is a space between the username and the word")
-                             self.publicGames[channelName] = WordleGame(memb.name, wordToBGuessed, False)
-                        
-                        await message.delete()
+                    
                         
                         
                     else:
@@ -409,11 +415,17 @@ class DiscordGameBot:
                         if not ISMAIN:
                             self.playStat.resetGame()
                         elif isGroupWordle:
+                            rolename = "The Wordle Authorities"
+                            role = discordTools.get(self.client.guild.roles, name = rolename)
+                            roles = message.author.roles
+                            if not role in roles:
+                                await message.channel.send(f"{username}, you have authority here")
                             try:
-                                self.playStat.updateGroupWordle(GROUPWORDLE)
-                                self.wordleDict[GROUPWORDLE] = None
+                                game = self.wordleDict[channelName]
+                                await message.channel.send(f"{username} has cancelled {game.name}'s game. Sorry {game.name} sucks.")
+                                self.wordleDict[channelName] = None
                             except:
-                                pass
+                                await message.channel.send(f"{username} has cancelled {game.name}'s game. Sorry {game.name} sucks.")
                                 
                         if not notInCurrGames:
                             self.currGames.pop(username)
@@ -425,8 +437,9 @@ class DiscordGameBot:
                         self.playStat.setMute( username, 0)
                     else:
                         await message.channel.send("Invalid Command.")
+                
                 else:
-                    await message.author.send("Invalid Command.")
+                    await message.channel.send("Invalid Command.")
 
                 return
             userMessage = userMessage.lower()
