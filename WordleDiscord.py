@@ -321,6 +321,8 @@ class DiscordGameBot:
                    
                     if(message.embeds == []):
                         self.lastPictureMsg[channelIdAsKey] = message
+                    else:
+                        del self.lastPictureMsg[channelIdAsKey]
                 #VERY IMPORTANT RETURN. If not there it will endlessly send the author a message!!!!    
                 return
 
