@@ -161,7 +161,7 @@ class MainWindow(QMainWindow):
         self.wordleGrid.nextGuess()
 
 
-    def evalKeyboard(self, keyboardDict: dict):
+    def paintKeyboard(self, keyboardDict: dict):
         self.keyboard.evalKeyboard(keyboardDict)
 
     def copyToClipboard(self):
