@@ -291,7 +291,11 @@ class DiscordGameBot:
 
         @self.client.event
         async def on_message(message):
-
+            fromSelf = message.author.id == self.client.application_id
+            
+            if(message.author.bot and not fromSelf):
+                return
+            
             channelType = message.channel.type.name
             channelName = str(message.channel)
             isGroupWordle = False
@@ -308,20 +312,24 @@ class DiscordGameBot:
                             print(reaction)
                 if not isGroupWordle:
                     return
-                
-            if message.author.bot:
-                if message.attachments or message.embeds != []:
-
+            #if the message is from itself.    
+            if fromSelf:   
+                if (message.embeds != []):
 
                     channelIdAsKey = message.channel.id
                     
                     if channelIdAsKey in self.lastPictureMsg.keys():
                         lastPicMsg = self.lastPictureMsg[channelIdAsKey]
-                        await lastPicMsg.delete()
+                        try:
+                            await lastPicMsg.delete()
+                            print("succesful TO deletion:")
+                        except:
+                              print("FAIL TO DELETE")
                    
-                    if(message.embeds == []):
+                    if(message.embeds[0].colour == discord.Colour.yellow()):
                         self.lastPictureMsg[channelIdAsKey] = message
                     else:
+                        #if the embeds is empty this means the game is finished and we can delete the message.
                         del self.lastPictureMsg[channelIdAsKey]
                 #VERY IMPORTANT RETURN. If not there it will endlessly send the author a message!!!!    
                 return
@@ -493,12 +501,11 @@ class DiscordGameBot:
                     self.currGames[username] = WordleGame(username, self.wod, True)
                     self.currGames[username].replay(lines)
                 game = None
+                
                 if not isGroupWordle:
                     game = self.currGames[username]
                 else:
                     game = self.publicGames[channelName]
-                    #TODO make it where the person being challenge can only play
-                    #if it's not an open game and the person who should not be playing tries to play.
                     if not game.isOpen and game.name != username:
                         if(self.wordleDict.isWord(userMessage.upper().rstrip()) or userMessage == "play"):
                             await message.channel.send(f"{game.name} is currently playing a challenge game in this channel. You use another open group-wordle channel if you please.")
@@ -520,7 +527,17 @@ class DiscordGameBot:
                             
                             try:
                                 if not game.isDone:
-                                    await message.channel.send("", file=discord.File(filenamePic))
+                                    ava = message.author.display_avatar
+                                    tittle = "KEEP GOING"
+                                    if game.guessNumber == 5:
+                                        tittle = "I'm scared...."
+                                    
+                                    color = discord.Colour.yellow()
+                                    em = discord.Embed(title = tittle, description = "", colour = color)
+                                    em.set_author(name = f"{username}")
+                                    em.set_thumbnail(url = f"{ava}")
+                                    em.set_image(url = f'attachment://{filenamePic.split("/")[-1]}')
+                                    await message.channel.send(embed = em, file=discord.File(filenamePic))
                                 print(username + " Message sent at " +
                                       str(datetime.now()))
 
@@ -530,10 +547,13 @@ class DiscordGameBot:
 
                             if (game.isDone):
                                 tittle = "LOSER"
+                                color = discord.Colour.red()
                                 if game.isWinner:
                                     tittle = "GOOD JOB!"
+                                    if game.guessNumber == 6:
+                                        tittle = "PHEW..."
+                                    color =  discord.Colour.green()
                                 ava = message.author.display_avatar
-                                color =  discord.Colour.green()   
                                 em = discord.Embed(title = tittle, description = "", colour = color)
                                 em.set_author(name = f"{username}")
                                 em.set_thumbnail(url = f"{ava}")
@@ -643,6 +663,7 @@ class DiscordGameBot:
                                     await message.author.send(sending[:-1])
                         ## I need all of this to be in a first game checker.
                         else:
+                            
                             #Not in word dictionary
                             pictureResendPath = pictureDir
                             if isGroupWordle:
@@ -651,7 +672,15 @@ class DiscordGameBot:
                                 pictureResendPath += username
                             pictureResendPath += ".jpg"
                             self.wordleImageCreator.drawWordleGame(pictureResendPath, game, True)
-                            await message.channel.send("", file=discord.File(pictureResendPath))
+                            ava = message.author.display_avatar
+                            tittle = "Not a Word!"
+
+                            color = discord.Colour.yellow()
+                            em = discord.Embed(title = tittle, description = "", colour = color)
+                            em.set_author(name = f"{username}")
+                            em.set_thumbnail(url = f"{ava}")
+                            em.set_image(url = f'attachment://{pictureResendPath.split("/")[-1]}')
+                            await message.channel.send(embed = em, file=discord.File(pictureResendPath))
 
                     else:
                         if not isGroupWordle:
