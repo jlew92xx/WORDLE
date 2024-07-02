@@ -2,14 +2,14 @@ from PIL import Image, ImageDraw, ImageFont
 from WordleGame import WordleGame
 import WordleConfigure
 from enums import Status
-SQUARE_SIDE_SIZE = 50
-GAP = 5
-TOP_LEFTX = 12
-TOP_LEFTY = 40
-keyWidth = 27
-keyHeight = 40
+SQUARE_SIDE_SIZE = 50 * 2
+GAP = 5 *2
+TOP_LEFTX = 12 * 2
+TOP_LEFTY = 40 * 2
+keyWidth = 49
+keyHeight = 70
 
-size = (300, 530)
+size = (300*2, 1030)
 correctColor = (106, 170, 100)
 inWordColor = (201, 180, 88)
 incorrectColor = (120, 124, 126)
@@ -33,10 +33,10 @@ class WordleImage():
         currLy = TOP_LEFTY
         
         self.draw.text(
-                (currLx + 1.75*(SQUARE_SIDE_SIZE), currLy - 30), 
+                (currLx + 1.75*(SQUARE_SIDE_SIZE), currLy - 60), 
                 "WORDLE", 
                 fill='white',
-                font= ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeMono.ttf", 25, encoding="unic"),
+                font= ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeMono.ttf", 50, encoding="unic"),
                 align='center',
                 stroke_width = 1,
                 stroke_fill='white'
@@ -75,16 +75,16 @@ class WordleImage():
            
             currLy += (SQUARE_SIDE_SIZE + GAP)
             
-        currLy += (5)
+        currLy += (10)
         if(not game.isDone and isResend):
             self.draw.text(
                 (currLx + 1.25*(SQUARE_SIDE_SIZE), currLy), 
                 "Not in Word List", 
-                fill='white',
-                font= ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeMono.ttf", 15, encoding="unic"),
+                fill='yellow',
+                font= ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeMono.ttf", 30, encoding="unic"),
                 align='center',
                 stroke_width = 1,
-                stroke_fill='white'
+                stroke_fill='yellow'
             )
         elif(not game.isWinner and game.isDone):
             
@@ -92,17 +92,17 @@ class WordleImage():
                 (currLx + 2.25*(SQUARE_SIDE_SIZE), currLy), 
                 game.wod, 
                 fill='white',
-                font= ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeMono.ttf", 15, encoding="unic"),
+                font= ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeMono.ttf", 30, encoding="unic"),
                 align='center',
                 stroke_width = 1,
                 stroke_fill='red'
             )
         
-        currLy += (20)
+        currLy += (40)
         #first row
         gameKeyBoard = game.keyboard
         
-        keyGap = 0
+        keyGap = 5
         for c in FIRST_ROW:
             color = unknownColor
             if(c in gameKeyBoard.keys()):
@@ -119,7 +119,7 @@ class WordleImage():
             
             
         currLx = TOP_LEFTX + .5*keyWidth
-        currLy += keyHeight
+        currLy += keyHeight + keyGap
             
         for c in SECOND_ROW:
             color = unknownColor
@@ -136,7 +136,7 @@ class WordleImage():
             currLx += (keyWidth + keyGap)
         
         currLx = TOP_LEFTX + 1.5*keyWidth
-        currLy += keyHeight
+        currLy += keyHeight +keyGap
         
         for c in THIRD_ROW:
             color = unknownColor
@@ -169,10 +169,10 @@ class WordleImage():
         )
         
         self.draw.text(
-            (xy[0][0] + 12, xy[0][1]), 
+            (xy[0][0] + 20, xy[0][1]), 
             c, 
             fill='white',
-            font= ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeMono.ttf", 50, encoding="unic"),
+            font= ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeMono.ttf", 50 *2, encoding="unic"),
             align='center',
             stroke_width = 1,
             stroke_fill= 'white'
@@ -185,10 +185,10 @@ class WordleImage():
             fontColor = "black"
         
         self.draw.text(
-            (xy[0][0] + 7.5, xy[0][1] + 8.9), 
+            (xy[0][0] + 8.5, xy[0][1] + 8.8), 
             c, 
             fill= fontColor,
-            font= ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeMono.ttf", 20, encoding="unic"),
+            font= ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeMono.ttf", 25 *2, encoding="unic"),
             align='center',
             stroke_width = 1,
             stroke_fill= fontColor
