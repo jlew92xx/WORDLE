@@ -13,6 +13,8 @@ class WordleGame():
         self.name = name
         self.wod = wod.upper()
         self.guessNumber = 0
+        self.challenger = None
+        self.timeRec = None                                                                                           
         
     def replay(self, words:list):
         for word in words:

@@ -10,14 +10,14 @@
             "request": "launch",
             //"program": "WordleMain.py",
             //"program": "WordleSolver.py",
-            //"program": "WordleDiscord.py",
+            "program": "WordleDiscord.py",
             //"program": "WordleReactor.py",
             //"program": "WordleGame.py",
             //"program": "WordleWebBot.py",
             //"program": "WordleSQL.py",
             //"program": "Ults.py",
             //"program": "ChatBot.py",
-            "program": "WordleImageGen.py",
+            //"program": "WordleImageGen.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }

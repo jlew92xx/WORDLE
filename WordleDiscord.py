@@ -383,13 +383,15 @@ class DiscordGameBot:
                     if self.wordleDict.isWord(wordToBGuessed):
                             await memb.send(f"{username} has challenge you in a game of Wordle in which they chose a word for you.\n You follow the link to the proper channel <#{message.channel.id}> and start playing by sending those 5 lettered words")
                             await message.channel.send(f"{username} has challenged {memb.name} in a game of wordle.\nYou can challenge someone after this game by sending:\n !chall @username ||<word>|| (Surround with \"||\" to hide the word)\n Just make sure there is a space between the username and the word")
-                            self.publicGames[channelName] = WordleGame(memb.name, wordToBGuessed, False)
+                            newGame = WordleGame(memb.name, wordToBGuessed, False)
+                            newGame.challenger = username
+                            self.publicGames[channelName] = newGame
                     else:
                         await message.channel.send("Not a word, ya jerk")
                     await message.delete()
                     return
                 command = userMessage.split("=")
-                commandWord = command[0] 
+                commandWord = command[0].lower().strip()
                 if (len(command) == 2):
                     
                     paramWord = command[1].strip()
@@ -510,7 +512,10 @@ class DiscordGameBot:
                         if(self.wordleDict.isWord(userMessage.upper().rstrip()) or userMessage == "play"):
                             await message.channel.send(f"{game.name} is currently playing a challenge game in this channel. You use another open group-wordle channel if you please.")
                         return
-                #The game is played here
+                
+                if game.timeRec != None and time.time() - game.timeRec < 2:
+                    return
+                
                 if (not game.isDone):
                     if (len(userMessage) == WordleConfigure.WORDSIZE):
                         submittedWord = userMessage.upper().rstrip()
@@ -523,6 +528,7 @@ class DiscordGameBot:
                                 filenamePic += channelName
                             filenamePic += ".jpg"
                             game.eval(submittedWord)
+                            game.timeRec = time.time()
                             self.wordleImageCreator.drawWordleGame(filenamePic, game, False)
                             
                             try:
@@ -538,6 +544,7 @@ class DiscordGameBot:
                                     em.set_thumbnail(url = f"{ava}")
                                     em.set_image(url = f'attachment://{filenamePic.split("/")[-1]}')
                                     await message.channel.send(embed = em, file=discord.File(filenamePic))
+                                    
                                 print(username + " Message sent at " +
                                       str(datetime.now()))
 
@@ -558,11 +565,13 @@ class DiscordGameBot:
                                 em.set_author(name = f"{username}")
                                 em.set_thumbnail(url = f"{ava}")
                                 em.set_image(url = f'attachment://{filenamePic.split("/")[-1]}')
-                                await message.channel.send(embed = em, file=discord.File(filenamePic))
+                                sentMsg = await message.channel.send(embed = em, file=discord.File(filenamePic))
                                 if isGroupWordle:
                                     
                                     self.publicGames[channelName] = None
-
+                                    if (game.challenger != None):
+                                        challenger = self.userObjects[game.challenger]
+                                        await challenger.send(f"{game.name} has completed your challenge. Find it here by following this link {sentMsg.jump_url}")
                                     return
                                 eogMsg = ""
                                 guessesCommas = ""
@@ -661,6 +670,7 @@ class DiscordGameBot:
                                             sending += line + "\n"
 
                                     await message.author.send(sending[:-1])
+                                
                         ## I need all of this to be in a first game checker.
                         else:
                             
